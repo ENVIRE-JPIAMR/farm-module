@@ -61,7 +61,21 @@ bconcentration_ci_upper = 0.57 # upper limit of the 95% CI for bconcentration
 bconcentration_sd = (bconcentration_ci_upper - bconcentration_est) / 1.96 # standard deviation for bconcentration
 
 
+## Estimated variables
 
+esbl.min <- 0
+esbl.max <- 10
+water_reduction.min <- 0.7
+water_reduction.max <- 0.8
+daily_intake.sd <- 0.1
+ingested_feces.min  <- 0
+ingested_feces.max  <- 2
+ingested_feces.mode <- 0.05
+e_rate.min <- 0.8
+e_rate.max <- 1.2
+e_rate <- 0.3
+day.min <- 1
+day.max <- 36
 
 
 #initial animals, density function
@@ -91,7 +105,7 @@ initial_animals_density <- function(prevalence,target_weight, density, size) {
     healthy[rep(1,round(n_animals*(1-prevalence))),]
   ) %>% mutate(content = 0,
                sum_feces = 0,
-               esbl = ifelse(days_since_infection == -1, 0, 10),
+               esbl = ifelse(days_since_infection == -1, esbl.min, esbl.max),
                sum_environment=0,
                density = density,
                infected = days_since_infection != -1,
@@ -171,7 +185,7 @@ infection_animals2_model3 <- function(animals, b_concentration,Dt) {
 #quantity of feces produced by a broiler per day. 
 
 feces_function <- function(day, animals) {
-  feces_amount <- runif(nrow(animals), min= min_water[day] , max= max_water[day]) * runif(nrow(animals), 0.7, 0.8) + (daily_intake[day] * rnorm(nrow(animals), 1, 0.1)) - daily_gain[day]
+  feces_amount <- runif(nrow(animals), min= min_water[day] , max= max_water[day]) * runif(nrow(animals), water_reduction.min, water_reduction.max) + (daily_intake[day] * rnorm(nrow(animals), 1, daily_intake.sd)) - daily_gain[day]
   animals$content <- feces_amount
   
   animals$sum_feces <- animals$sum_feces + feces_amount
@@ -185,7 +199,7 @@ feces_function <- function(day, animals) {
 #amount of feces ingested per day
 ingested_feces <- function(day, animals) {
   
-  ingested <- rpert(nrow(animals), 0 ,0.05, 2) #+ log(animals$age)
+  ingested <- rpert(nrow(animals), ingested_feces.min ,ingested_feces.mode, ingested_feces.max) #+ log(animals$age)
   animals$ingested_feces <- ingested
   
   return(animals)
@@ -199,7 +213,7 @@ excretion <- function(animals, e_rate) {
   content<- animals$content
   esbl<- animals$esbl
   
-  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1,esbl*e_rate*runif(n = 1, min = 0.8, max = 1.2),0),
+  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1,esbl*e_rate*runif(n = 1, min = e_rate.min, max = e_rate.max),0),
                                       sum_environment = sum_environment + cfu_environment - (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)),
                                       esbl = esbl - cfu_environment  + (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)) )
   }
@@ -227,7 +241,7 @@ simulate_day <- function(animals, day, until) {
  
   animals <- feces_function (day,animals)
   animals <- ingested_feces(day,animals)
-  animals <- excretion(animals,e_rate=0.3)
+  animals <- excretion(animals,e_rate)
   animals <- logistic_growth(animals, K=10^6*animals$content, r= 10^runif(1,0,5))
   animals <- infection_animals2_model3(animals, rnorm(1, bconcentration_est, bconcentration_sd),1)
   animals <- environmental_decay(animals, 0.5)
@@ -242,7 +256,7 @@ simulate_day <- function(animals, day, until) {
 #montecarlo but also including the initial dataframe "animals" as day 1
 # the map function is used to run the simulation in parallel
 montecarlo <- map(1:1000, .progress = TRUE, function(x) {
-  simulated_days <- simulate_day(animals = animals, day = 1, until = 36)
+  simulated_days <- simulate_day(animals = animals, day = day.min, until = day.max)
   c(list(initial_animals), simulated_days)
 })
 
