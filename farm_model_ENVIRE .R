@@ -79,6 +79,7 @@ day.max <- 36
 r.min <- 0
 r.max <- 5
 K <- 10^6
+ed_rate <- 0.5
 
 #initial animals, density function
 # this function defines the initial flock. 
@@ -214,7 +215,7 @@ ingested_feces <- function(day, animals) {
 
 #excretion function
 # e_rate is the excretion rate of ESBL E. coli, expressed in % of the total amount of ESBL E. coli in the intestinal content
-excretion <- function(animals, e_rate) {
+excretion <- function(animals) {
   
   content<- animals$content
   esbl<- animals$esbl
@@ -227,7 +228,7 @@ excretion <- function(animals, e_rate) {
 
 # bacteria environmental decay  
 # ed_rate is the environmental decay rate of ESBL E. coli, expressed in % of the total amount of ESBL E. coli in the environment
-environmental_decay <- function(animals, ed_rate) {
+environmental_decay <- function(animals) {
   animals %>%
     mutate(sum_environment = ifelse(days_since_infection != -1,
                                     sum_environment * (1-ed_rate),
@@ -247,10 +248,10 @@ simulate_day <- function(animals, day, until) {
  
   animals <- feces_function (day,animals)
   animals <- ingested_feces(day,animals)
-  animals <- excretion(animals,e_rate)
+  animals <- excretion(animals)
   animals <- logistic_growth(animals)
   animals <- infection_animals2_model3(animals, rnorm(1, bconcentration_est, bconcentration_sd),1)
-  animals <- environmental_decay(animals, 0.5)
+  animals <- environmental_decay(animals)
   
 
   
