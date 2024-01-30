@@ -76,7 +76,9 @@ e_rate.max <- 1.2
 e_rate <- 0.3
 day.min <- 1
 day.max <- 36
-
+r.min <- 0
+r.max <- 5
+K <- 10^6
 
 #initial animals, density function
 # this function defines the initial flock. 
@@ -127,7 +129,11 @@ initial_animals_density <- function(prevalence,target_weight, density, size) {
 # K is the maximum amount of bacteria in the substrate (the intestinal content in this case)
 # r is the growth rate of the bacteria
 
-logistic_growth <- function(animals, K, r) {
+logistic_growth <- function(animals) {
+  
+  K <- K*animals$content
+  r <- 10^runif(1, r.min, r.max)
+  
   animals %>%
     mutate(esbl = ifelse(days_since_infection != -1,
                          K / (1 + ((K - esbl) / esbl) * exp(-r * days_since_infection)),
@@ -242,7 +248,7 @@ simulate_day <- function(animals, day, until) {
   animals <- feces_function (day,animals)
   animals <- ingested_feces(day,animals)
   animals <- excretion(animals,e_rate)
-  animals <- logistic_growth(animals, K=10^6*animals$content, r= 10^runif(1,0,5))
+  animals <- logistic_growth(animals)
   animals <- infection_animals2_model3(animals, rnorm(1, bconcentration_est, bconcentration_sd),1)
   animals <- environmental_decay(animals, 0.5)
   
