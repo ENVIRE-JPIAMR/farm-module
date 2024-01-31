@@ -6,49 +6,6 @@ library(scales)
 library(readxl)
 set.seed(123)
 
-# introduce random scenarios
-
-##Production parameters model - water consumption (Avian advice, 2009. University of Arkansas) - other parameters (Ross308 performance objectives, 2022)
-min_water <- c(
-  14.384558, 21.1604419, 35.5449999, 40.503887, 45.046379, 50.4973694,
-  54.7370286, 47.5068955, 73.3990999, 73.3612458, 87.1022841, 98.5720764,
-  107.4677899, 113.2594672, 112.4645311, 116.0606706, 123.0636791, 131.5429975,
-  140.8929602, 146.495367, 134.6470337, 147.8959687, 143.6941636, 163.7568366,
-  160.0849889, 175.3780453, 185.6743605, 201.8759153, 200.3996054, 181.0561603,
-  212.5507715, 225.4211655, 209.4467353, 223.7934392, 212.5507715,210.3552337
-)  #minimum water consumption
-max_water <- c(
-  29.8668849, 42.6615707, 53.6392597, 62.6485355, 64.1626995, 73.2476835,
-  81.9541265, 87.7079497, 110.3447015, 113.8651328, 118.861874, 137.5239453,
-  143.6184554, 153.8390624, 153.8390624, 174.6588174, 185.7500687, 196.0085298,
-  206.6455319, 212.2479387, 207.0997811, 224.9669163, 238.0644349, 248.2471878,
-  245.1431516, 262.7453081, 271.5274593, 287.0097862, 290.8330503, 300.0315966,
-  298.1388916, 319.7535827, 333.5703292, 323.6147009, 330.7691258, 331.1855209	
-)  #max water consumption
-mean_water <- c(
-  20.2519435, 29.147657, 41.5638018, 48.6046644, 38.0055164, 60.4151436,
-  66.9639029, 73.8533491, 85.3231414, 97.3228911, 105.3479603, 114.2815279,
-  124.0857398, 131.6565598, 135.1769911, 147.4038654, 156.5645576, 163.0376087,
-  166.8608728, 174.8480879, 178.7849143, 187.8698983, 201.6866448, 206.6076778,
-  205.6991794, 217.8881996, 226.9731836, 238.7836628, 238.7836628, 248.5500206,
-  258.5056489, 265.357241, 265.8114902, 274.7829119, 277.1298661, 281.4452335
-) #mean water consumption
-weight <- c(
-  81, 102, 125, 151, 181, 213, 249, 288, 330, 376, 425, 477, 533, 592, 655,
-  720, 789, 860, 935, 1012, 1092, 1174, 1258, 1345, 1434, 1524, 1616, 1710,
-  1805, 1901, 1999, 2097, 2196, 2296, 2396, 2496
-) #broilers weight
-daily_gain <- c(
-  19, 21, 23, 26, 29, 32, 36, 39, 42, 46, 49, 52, 56, 59, 62, 66, 69, 72,
-  74, 77, 80, 82, 85, 87, 89, 91, 92, 94, 95, 96, 97, 98, 99, 100, 100,
-  100
-)
-daily_intake <- c(
-  16, 20, 24, 27, 31, 35, 39, 44, 48, 52, 57, 62, 67, 72, 77, 83, 88, 94,
-  100, 105, 111, 117, 122, 128, 134, 139, 145, 150, 156, 161, 166, 171,
-  176, 180, 185, 189
-) #broilers feed intake
-
 ####################################
 
  ##create dataframe             
@@ -62,11 +19,31 @@ bconcentration_ci_upper = 0.57 # upper limit of the 95% CI for bconcentration
 bconcentration_sd = (bconcentration_ci_upper - bconcentration_est) / 1.96 # standard deviation for bconcentration
 
 
-## Read input variables
-input <- read_excel("inputs.xlsx", col_types = c("text", "text", "text", "text", "numeric"))
+df_read <- read.table("inputs.csv", header = TRUE, sep = ';')
 
-named_vector <- with(input, setNames(Value, Variable))
-input_list <- lapply(split(named_vector, names(named_vector)), unname)
+# parsing objects from input list
+input_objects = list(
+  water_consum.min    = eval(parse(text = df_read$Value[df_read$Variable == "water_consum.min"])),
+  water_consum.max    = eval(parse(text = df_read$Value[df_read$Variable == "water_consum.max"])),
+  water_consum.mean   = eval(parse(text = df_read$Value[df_read$Variable == "water_consum.mean"])),
+  weight              = eval(parse(text = df_read$Value[df_read$Variable == "weight"])),
+  daily_gain          = eval(parse(text = df_read$Value[df_read$Variable == "daily_gain"])),
+  daily_intake        = eval(parse(text = df_read$Value[df_read$Variable == "daily_intake"]))
+)
+
+# parsing non-objects from input list
+idx_double <- df_read$Type != "OBJECT"
+df_double <-
+  data.frame(id = df_read$Variable[idx_double],
+             val = unlist(lapply(df_read$Value[idx_double], function(x)
+               eval(parse(
+                 text = x
+               )))))
+
+named_vector <- with(df_double, setNames(val, id))
+input_doubles <- lapply(split(named_vector, names(named_vector)), unname)
+
+input_list <- c(input_objects, input_doubles)  
 
 #initial animals, density function
 # this function defines the initial flock. 
@@ -180,7 +157,7 @@ infection_animals2_model3 <- function(animals) {
 #quantity of feces produced by a broiler per day. 
 
 feces_function <- function(day, animals) {
-  feces_amount <- runif(nrow(animals), min= min_water[day] , max= max_water[day]) * runif(nrow(animals), input_list$water_reduction.min, input_list$water_reduction.max) + (daily_intake[day] * rnorm(nrow(animals), 1, input_list$daily_intake.sd)) - daily_gain[day]
+  feces_amount <- runif(nrow(animals), min= input_list$water_consum.min[day] , max= input_list$water_consum.max[day]) * runif(nrow(animals), input_list$water_reduction.min, input_list$water_reduction.max) + (input_list$daily_intake[day] * rnorm(nrow(animals), 1, input_list$daily_intake.sd)) - input_list$daily_gain[day]
   animals$content <- feces_amount
   
   animals$sum_feces <- animals$sum_feces + feces_amount
