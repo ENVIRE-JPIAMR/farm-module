@@ -3,6 +3,7 @@ library(mc2d) #for pert distribution
 library(future)
 library(furrr)
 library(scales)
+library(readxl)
 set.seed(123)
 
 # introduce random scenarios
@@ -61,36 +62,11 @@ bconcentration_ci_upper = 0.57 # upper limit of the 95% CI for bconcentration
 bconcentration_sd = (bconcentration_ci_upper - bconcentration_est) / 1.96 # standard deviation for bconcentration
 
 
-## Estimated variables
+## Read input variables
+input <- read_excel("inputs.xlsx", col_types = c("text", "text", "text", "text", "numeric"))
 
-esbl.min <- 0
-esbl.max <- 10
-water_reduction.min <- 0.7
-water_reduction.max <- 0.8
-daily_intake.sd <- 0.1
-ingested_feces.min  <- 0
-ingested_feces.max  <- 2
-ingested_feces.mode <- 0.05
-e_rate.min <- 0.8
-e_rate.max <- 1.2
-e_rate <- 0.3
-day.min <- 1
-day.max <- 36
-r.min <- 0
-r.max <- 5
-K <- 10^6
-ed_rate <- 0.5
-
-## Selected variables
-
-n_sim <- 100
-farm_size <- 100
-farm_density <- 39      # max. no. of chicken per m2
-target_weight <- 2.5 
-prevalence <- 0.01
-litter_mass <- 1000     # mass of litter (in g) per chicken
-Dt <- 1
-
+named_vector <- with(input, setNames(Value, Variable))
+input_list <- lapply(split(named_vector, names(named_vector)), unname)
 
 #initial animals, density function
 # this function defines the initial flock. 
@@ -100,7 +76,7 @@ Dt <- 1
 # size is the size of the farm, expressed in m2
 
 
-initial_animals_density <- function(prevalence,target_weight, density, size) {
+initialize_df <- function() {
   healthy <- tribble(
     ~days_since_infection, ~age,
     -1, 1
@@ -112,16 +88,16 @@ initial_animals_density <- function(prevalence,target_weight, density, size) {
   )
   
   # Number of animals depending on broiler density and farm size
-  n_animals <- density/target_weight*size
+  n_animals <- input_list$farm_density/input_list$target_weight*input_list$farm_size
   
   animals <- rbind(
-    sick[rep(1,round(n_animals*prevalence)),],
-    healthy[rep(1,round(n_animals*(1-prevalence))),]
+    sick[rep(1,round(n_animals*input_list$prevalence)),],
+    healthy[rep(1,round(n_animals*(1-input_list$prevalence))),]
   ) %>% mutate(content = 0,
                sum_feces = 0,
-               esbl = ifelse(days_since_infection == -1, esbl.min, esbl.max),
+               esbl = ifelse(days_since_infection == -1, input_list$esbl.min, input_list$esbl.max),
                sum_environment=0,
-               density = density,
+               density = input_list$farm_density,
                infected = days_since_infection != -1,
                ingested_feces =0,
                cfu_environment =0)
@@ -143,8 +119,8 @@ initial_animals_density <- function(prevalence,target_weight, density, size) {
 
 logistic_growth <- function(animals) {
   
-  K <- K*animals$content
-  r <- 10^runif(1, r.min, r.max)
+  K <- input_list$K*animals$content
+  r <- 10^runif(1, input_list$r.min, input_list$r.max)
   
   animals %>%
     mutate(esbl = ifelse(days_since_infection != -1,
@@ -173,13 +149,13 @@ force_of_infection_model3 <- function(animals, b_concentration) {
 # b_concentration is the concentration of ESBL E. coli in the environment, expressed in cfu * day^-1
 # Dt is the time step, expressed in days
 
-infection_animals2_model3 <- function(animals, Dt) {
+infection_animals2_model3 <- function(animals) {
   
   b_concentration <- rnorm(1, bconcentration_est, bconcentration_sd)
   foi <- force_of_infection_model3(animals, b_concentration)
   
   num_negatives <- sum(animals$days_since_infection == -1)
-  number_new_infected <- round(num_negatives * (1 - exp(-foi * Dt)))
+  number_new_infected <- round(num_negatives * (1 - exp(-foi * input_list$Dt)))
   number_new_infected <- max(0, number_new_infected)
   
   
@@ -204,7 +180,7 @@ infection_animals2_model3 <- function(animals, Dt) {
 #quantity of feces produced by a broiler per day. 
 
 feces_function <- function(day, animals) {
-  feces_amount <- runif(nrow(animals), min= min_water[day] , max= max_water[day]) * runif(nrow(animals), water_reduction.min, water_reduction.max) + (daily_intake[day] * rnorm(nrow(animals), 1, daily_intake.sd)) - daily_gain[day]
+  feces_amount <- runif(nrow(animals), min= min_water[day] , max= max_water[day]) * runif(nrow(animals), input_list$water_reduction.min, input_list$water_reduction.max) + (daily_intake[day] * rnorm(nrow(animals), 1, input_list$daily_intake.sd)) - daily_gain[day]
   animals$content <- feces_amount
   
   animals$sum_feces <- animals$sum_feces + feces_amount
@@ -218,7 +194,7 @@ feces_function <- function(day, animals) {
 #amount of feces ingested per day
 ingested_feces <- function(animals) {
   
-  ingested <- rpert(nrow(animals), ingested_feces.min ,ingested_feces.mode, ingested_feces.max) #+ log(animals$age)
+  ingested <- rpert(nrow(animals), input_list$ingested_feces.min ,input_list$ingested_feces.mode, input_list$ingested_feces.max) #+ log(animals$age)
   animals$ingested_feces <- ingested
   
   return(animals)
@@ -232,7 +208,7 @@ excretion <- function(animals) {
   content<- animals$content
   esbl<- animals$esbl
   
-  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1,esbl*e_rate*runif(n = 1, min = e_rate.min, max = e_rate.max),0),
+  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1,esbl*input_list$e_rate*runif(n = 1, min = input_list$e_rate.min, max = input_list$e_rate.max),0),
                                       sum_environment = sum_environment + cfu_environment - (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)),
                                       esbl = esbl - cfu_environment  + (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)) )
   }
@@ -243,11 +219,11 @@ excretion <- function(animals) {
 environmental_decay <- function(animals) {
   animals %>%
     mutate(sum_environment = ifelse(days_since_infection != -1,
-                                    sum_environment * (1-ed_rate),
+                                    sum_environment * (1-input_list$ed_rate),
                                     sum_environment))}
 
-litter <- farm_size * litter_mass
-animals <- initial_animals_density(prevalence, target_weight, farm_density, farm_size)
+litter <- input_list$farm_size * input_list$litter_mass
+animals <- initialize_df()
 initial_animals <- animals
 
 #this function simulates a production day
@@ -259,7 +235,7 @@ simulate_day <- function(animals, day, until) {
   animals <- ingested_feces(animals)
   animals <- excretion(animals)
   animals <- logistic_growth(animals)
-  animals <- infection_animals2_model3(animals, Dt)
+  animals <- infection_animals2_model3(animals)
   animals <- environmental_decay(animals)
   
 
@@ -271,8 +247,8 @@ simulate_day <- function(animals, day, until) {
 
 #montecarlo but also including the initial dataframe "animals" as day 1
 # the map function is used to run the simulation in parallel
-montecarlo <- map(1:n_sim, .progress = TRUE, function(x) {
-  simulated_days <- simulate_day(animals = animals, day = day.min, until = day.max)
+montecarlo <- map(1:input_list$n_sim, .progress = TRUE, function(x) {
+  simulated_days <- simulate_day(animals = animals, day = input_list$day.min, until = input_list$day.max)
   c(list(initial_animals), simulated_days)
 })
 
