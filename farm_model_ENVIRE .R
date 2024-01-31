@@ -81,6 +81,16 @@ r.max <- 5
 K <- 10^6
 ed_rate <- 0.5
 
+## Selected variables
+
+n_sim <- 100
+farm_size <- 100
+farm_density <- 39      # max. no. of chicken per m2
+target_weight <- 2.5 
+prevalence <- 0.01
+litter_mass <- 1000     # mass of litter (in g) per chicken
+
+
 #initial animals, density function
 # this function defines the initial flock. 
 # prevalence is the starting prevalence of ESBL E. coli, expressed in %
@@ -234,11 +244,8 @@ environmental_decay <- function(animals) {
                                     sum_environment * (1-ed_rate),
                                     sum_environment))}
 
-
-
-farm <- 100
-litter <- farm * 1000
-animals <- initial_animals_density(0.01,2.5,39, farm)
+litter <- farm_size * litter_mass
+animals <- initial_animals_density(prevalence, target_weight, farm_density, farm_size)
 initial_animals <- animals
 
 #this function simulates a production day
@@ -262,7 +269,7 @@ simulate_day <- function(animals, day, until) {
 
 #montecarlo but also including the initial dataframe "animals" as day 1
 # the map function is used to run the simulation in parallel
-montecarlo <- map(1:1000, .progress = TRUE, function(x) {
+montecarlo <- map(1:n_sim, .progress = TRUE, function(x) {
   simulated_days <- simulate_day(animals = animals, day = day.min, until = day.max)
   c(list(initial_animals), simulated_days)
 })
