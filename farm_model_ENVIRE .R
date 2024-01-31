@@ -216,7 +216,7 @@ feces_function <- function(day, animals) {
 
 
 #amount of feces ingested per day
-ingested_feces <- function(day, animals) {
+ingested_feces <- function(animals) {
   
   ingested <- rpert(nrow(animals), ingested_feces.min ,ingested_feces.mode, ingested_feces.max) #+ log(animals$age)
   animals$ingested_feces <- ingested
@@ -256,7 +256,7 @@ simulate_day <- function(animals, day, until) {
   
  
   animals <- feces_function (day,animals)
-  animals <- ingested_feces(day,animals)
+  animals <- ingested_feces(animals)
   animals <- excretion(animals)
   animals <- logistic_growth(animals)
   animals <- infection_animals2_model3(animals, Dt)
