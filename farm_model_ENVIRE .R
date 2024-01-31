@@ -89,6 +89,7 @@ farm_density <- 39      # max. no. of chicken per m2
 target_weight <- 2.5 
 prevalence <- 0.01
 litter_mass <- 1000     # mass of litter (in g) per chicken
+Dt <- 1
 
 
 #initial animals, density function
@@ -172,8 +173,9 @@ force_of_infection_model3 <- function(animals, b_concentration) {
 # b_concentration is the concentration of ESBL E. coli in the environment, expressed in cfu * day^-1
 # Dt is the time step, expressed in days
 
-infection_animals2_model3 <- function(animals, b_concentration,Dt) {
+infection_animals2_model3 <- function(animals, Dt) {
   
+  b_concentration <- rnorm(1, bconcentration_est, bconcentration_sd)
   foi <- force_of_infection_model3(animals, b_concentration)
   
   num_negatives <- sum(animals$days_since_infection == -1)
@@ -257,7 +259,7 @@ simulate_day <- function(animals, day, until) {
   animals <- ingested_feces(day,animals)
   animals <- excretion(animals)
   animals <- logistic_growth(animals)
-  animals <- infection_animals2_model3(animals, rnorm(1, bconcentration_est, bconcentration_sd),1)
+  animals <- infection_animals2_model3(animals, Dt)
   animals <- environmental_decay(animals)
   
 
