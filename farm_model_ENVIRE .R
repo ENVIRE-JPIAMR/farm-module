@@ -6,19 +6,7 @@ library(scales)
 library(readxl)
 set.seed(123)
 
-####################################
-
- ##create dataframe             
-df_conf <- data.frame()
-
-#force of infection input, Dame-Korevaar 2020
-# these parameters are used to calculate the force of infenction 
-bconcentration_est = 0.31 # cfu * day^-1
-bconcentration_ci_lower = 0.10 # lower limit of the 95% CI for bconcentration
-bconcentration_ci_upper = 0.57 # upper limit of the 95% CI for bconcentration
-bconcentration_sd = (bconcentration_ci_upper - bconcentration_est) / 1.96 # standard deviation for bconcentration
-
-
+# read input variables
 df_read <- read.csv("inputs.csv", header = TRUE, sep = ';')
 
 # parsing objects from input list
@@ -91,9 +79,6 @@ initialize_df <- function() {
 
 
 ## bacteria logistic growth function. Growth rate from Becker 2022
-# K is the maximum amount of bacteria in the substrate (the intestinal content in this case)
-# r is the growth rate of the bacteria
-
 logistic_growth <- function(animals) {
   
   K <- input_list$K*animals$content
@@ -105,7 +90,7 @@ logistic_growth <- function(animals) {
                          esbl))}
 
 #force of infection
-force_of_infection_model3 <- function(animals, b_concentration) {
+force_of_infection_model3 <- function(animals) {
   
   sum_excretion_concentration <- animals %>%
     filter(days_since_infection != -1) %>%
@@ -115,7 +100,7 @@ force_of_infection_model3 <- function(animals, b_concentration) {
       env_fec = log10(environment / feces)
     ) %>% pull(env_fec)
   
-  foi <- b_concentration * sum_excretion_concentration 
+  foi <- input_list$beta.mean * sum_excretion_concentration 
   #in the study of dame korevaar the density was blabla and in this simulation...
   #100/8 m2, factor my density/density study
   return(foi)
@@ -123,13 +108,9 @@ force_of_infection_model3 <- function(animals, b_concentration) {
 
 
 #infection model 3, based on bacteria cfu in the environment. Dame-Korevaar 2020
-# b_concentration is the concentration of ESBL E. coli in the environment, expressed in cfu * day^-1
-# Dt is the time step, expressed in days
-
 infection_animals2_model3 <- function(animals) {
   
-  b_concentration <- rnorm(1, bconcentration_est, bconcentration_sd)
-  foi <- force_of_infection_model3(animals, b_concentration)
+  foi <- force_of_infection_model3(animals)
   
   num_negatives <- sum(animals$days_since_infection == -1)
   number_new_infected <- round(num_negatives * (1 - exp(-foi * input_list$Dt)))
