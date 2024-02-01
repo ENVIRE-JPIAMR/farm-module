@@ -19,7 +19,7 @@ bconcentration_ci_upper = 0.57 # upper limit of the 95% CI for bconcentration
 bconcentration_sd = (bconcentration_ci_upper - bconcentration_est) / 1.96 # standard deviation for bconcentration
 
 
-df_read <- read.table("inputs.csv", header = TRUE, sep = ';')
+df_read <- read.csv("inputs.csv", header = TRUE, sep = ';')
 
 # parsing objects from input list
 input_objects = list(
