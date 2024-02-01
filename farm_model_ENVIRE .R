@@ -185,7 +185,7 @@ excretion <- function(animals) {
   content<- animals$content
   esbl<- animals$esbl
   
-  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1,esbl*input_list$e_rate*runif(n = 1, min = input_list$e_rate.min, max = input_list$e_rate.max),0),
+  excretion_cfu <- animals %>% mutate(cfu_environment = ifelse(days_since_infection!=-1, esbl*input_list$e_rate, 0),
                                       sum_environment = sum_environment + cfu_environment - (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)),
                                       esbl = esbl - cfu_environment  + (animals$ingested_feces * sum(sum_environment)/sum(sum_feces)) )
   }
