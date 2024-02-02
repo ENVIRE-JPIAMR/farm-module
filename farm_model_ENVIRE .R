@@ -138,7 +138,9 @@ infection_animals2_model3 <- function(animals) {
 #quantity of feces produced by a broiler per day. 
 
 feces_function <- function(day, animals) {
-  feces_amount <- runif(nrow(animals), min= input_list$water_consum.min[day] , max= input_list$water_consum.max[day]) * runif(nrow(animals), input_list$water_reduction.min, input_list$water_reduction.max) + (input_list$daily_intake[day] * rnorm(nrow(animals), 1, input_list$daily_intake.sd)) - input_list$daily_gain[day]
+  
+  water_reduction <- (input_list$water_reduction.min + input_list$water_reduction.max)/2
+  feces_amount <- runif(nrow(animals), min= input_list$water_consum.min[day] , max= input_list$water_consum.max[day]) * water_reduction + input_list$daily_intake[day] - input_list$daily_gain[day]
   animals$content <- feces_amount
   
   animals$sum_feces <- animals$sum_feces + feces_amount
@@ -146,7 +148,6 @@ feces_function <- function(day, animals) {
   return(animals)
   
 }
-
 
 
 #amount of feces ingested per day

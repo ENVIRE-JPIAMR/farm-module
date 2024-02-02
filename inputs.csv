@@ -3,7 +3,6 @@ esbl.min;Estimated;DOUBLE;Minimum intestinal load of ESBL producing E. coli in t
 esbl.max;Estimated;DOUBLE;Maximum intestinal load of ESBL producing E. coli in the chicken's intestine;Becker et al. (2022);;100
 water_reduction.min;Estimated;DOUBLE;Minimum of what ?;Expert opinion Who ?;;0.7
 water_reduction.max;Estimated;DOUBLE;Maximum of what ?;Expert opinion Who ?;;0.8
-daily_intake.sd;Estimated;DOUBLE;XXXXXXXXXXXXXXXXXXXXXXXXX;;;0.1
 ingested_feces.min;Estimated;DOUBLE;;;;0
 ingested_feces.max;Estimated;DOUBLE;;;;2
 ingested_feces.mode;Estimated;DOUBLE;;;;0.05
