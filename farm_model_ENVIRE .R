@@ -139,8 +139,7 @@ infection_animals2_model3 <- function(animals) {
 
 feces_function <- function(day, animals) {
   
-  water_reduction <- (input_list$water_reduction.min + input_list$water_reduction.max)/2
-  feces_amount <- runif(nrow(animals), min= input_list$water_consum.min[day] , max= input_list$water_consum.max[day]) * water_reduction + input_list$daily_intake[day] - input_list$daily_gain[day]
+  feces_amount <- runif(nrow(animals), min= input_list$water_consum.min[day] , max= input_list$water_consum.max[day]) * input_list$water_reduction + input_list$daily_intake[day] - input_list$daily_gain[day]
   animals$content <- feces_amount
   
   animals$sum_feces <- animals$sum_feces + feces_amount
