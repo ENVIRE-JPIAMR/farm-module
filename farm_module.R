@@ -52,7 +52,7 @@ new.farm_module <- function(input_list = load_inputs()){
   }
   
   ## Force of infection
-  fm$force_of_infection_model3 <- function(animals) {
+  fm$force_of_infection <- function(animals) {
     sum_excretion_concentration <- animals %>%
       filter(infection_duration != -1) %>%
       summarise(
@@ -68,9 +68,9 @@ new.farm_module <- function(input_list = load_inputs()){
   }
 
   ## Infection model 3, based on bacteria cfu in the environment
-  fm$infection_animals2_model3 <- function(animals) {
+  fm$new_infected <- function(animals) {
     
-    foi <- fm$force_of_infection_model3(animals)
+    foi <- fm$force_of_infection(animals)
     
     num_negatives <- sum(animals$infection_duration == -1)
     number_new_infected <-
@@ -86,12 +86,17 @@ new.farm_module <- function(input_list = load_inputs()){
                                         number_new_infected,
                                         replace = FALSE)] <- 0
     
-    # TODO: move this whole thing outside (update function)
-    animals$age <- animals$age + 1  
+    return(animals)
+  }
+  
+  ## Update animals dataframe at end of day
+  fm$update_df <- function(animals) {
+    
     animals <- animals %>%
       mutate(
+        age = age + 1,
         infection_duration =
-          ifelse(infection_duration != -1, infection_duration + 1,-1),
+          ifelse(infection_duration != -1, infection_duration + 1, -1),
         B_infection_status = infection_duration != -1,
         C_esbl_gut = ifelse(
           infection_duration == 1,
@@ -102,7 +107,7 @@ new.farm_module <- function(input_list = load_inputs()){
     
     return(animals)
   }
-  
+
   ## Quantity of feces produced by a broiler per day
   fm$feces_function <- function(day, animals) {
     

@@ -17,8 +17,9 @@ simulate_day <- function(animals, day, until) {
   animals <- farm_module$ingested_feces(animals)
   animals <- farm_module$excretion(animals)
   animals <- farm_module$logistic_growth(animals)
-  animals <- farm_module$infection_animals2_model3(animals)
+  animals <- farm_module$new_infected(animals)
   animals <- farm_module$environmental_decay(animals)
+  animals <- farm_module$update_df(animals)
   
   if (day < until) 
     c(list(animals), simulate_day(animals, day = day + 1, until = until)) 
