@@ -42,7 +42,7 @@ df_montecarlo <-
 result <- df_montecarlo |>
   group_by(day, groups) |>
   summarise(
-    sum_environment = sum(sum_environment, na.rm = TRUE),
-    sum_feces = sum(sum_feces),
-    esbl = sum(esbl)
+    C_sum_esbl_env = sum(C_sum_esbl_env, na.rm = TRUE),
+    sum_feces_gut = sum(sum_feces_gut),
+    C_esbl_gut = sum(C_esbl_gut)
   )
