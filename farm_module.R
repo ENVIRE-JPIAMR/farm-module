@@ -10,26 +10,26 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Initialize the animals df: n_row = num(animals)
   fm$initialize_df <- function() {
     
-    healthy <- tribble(~ days_since_infection, ~ age, -1, 1)
-    sick    <- tribble(~ days_since_infection, ~ age, 1, 1)
+    healthy <- tribble(~ infection_duration, ~ age, -1, 1)
+    sick    <- tribble(~ infection_duration, ~ age, 1, 1)
     
     # Number of animals depending on broiler density and farm size
     n_animals <- input_list$farm_density/input_list$target_weight*input_list$farm_size
     
     animals <- rbind(sick[rep(1, round(n_animals * input_list$prevalence)), ],
                      healthy[rep(1, round(n_animals * (1 - input_list$prevalence))), ]) %>% mutate(
-                       content = 0,
-                       sum_feces = 0,
-                       esbl = ifelse(
-                         days_since_infection == -1,
+                       feces_gut = 0,
+                       sum_feces_gut = 0,
+                       C_esbl_gut = ifelse(
+                         infection_duration == -1,
                          input_list$esbl.min,
                          input_list$esbl.max
                        ),
-                       sum_environment = 0,
+                       C_sum_esbl_env = 0,
                        density = input_list$farm_density,
-                       infected = days_since_infection != -1,
+                       B_infection_status = infection_duration != -1,
                        ingested_feces = 0,
-                       cfu_environment = 0
+                       C_esbl_env = 0
                      )
     
     return(animals)
@@ -39,24 +39,25 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Bacteria logistic growth function inside broiler's gut
   fm$logistic_growth <- function(animals) {
     
-    K <- input_list$K * animals$content
+    K <- input_list$K * animals$feces_gut
     r <- 10 ^ runif(1, input_list$r.min, input_list$r.max)
     
+    #TODO: Fix this
     animals %>%
-      mutate(esbl = ifelse(days_since_infection != -1,
+      mutate(C_esbl_gut = ifelse(infection_duration != -1,
                            K / (
-                             1 + ((K - esbl) / esbl) * exp(-r * days_since_infection)
+                             1 + ((K - C_esbl_gut) / C_esbl_gut) * exp(-r * infection_duration)
                            ),
-                           esbl))
+                           C_esbl_gut))
   }
   
   ## Force of infection
   fm$force_of_infection_model3 <- function(animals) {
     sum_excretion_concentration <- animals %>%
-      filter(days_since_infection != -1) %>%
+      filter(infection_duration != -1) %>%
       summarise(
-        environment = sum(sum_environment),
-        feces = sum(sum_feces),
+        environment = sum(C_sum_esbl_env),
+        feces = sum(sum_feces_gut),
         env_fec = log10(environment / feces)
       ) %>% pull(env_fec)
     
@@ -71,7 +72,7 @@ new.farm_module <- function(input_list = load_inputs()){
     
     foi <- fm$force_of_infection_model3(animals)
     
-    num_negatives <- sum(animals$days_since_infection == -1)
+    num_negatives <- sum(animals$infection_duration == -1)
     number_new_infected <-
       round(num_negatives * (1 - exp(-foi * input_list$Dt)))
     number_new_infected <- max(0, number_new_infected)
@@ -81,20 +82,21 @@ new.farm_module <- function(input_list = load_inputs()){
       number_new_infected <- num_negatives
     }
     
-    animals$days_since_infection[sample(which(animals$days_since_infection == -1),
+    animals$infection_duration[sample(which(animals$infection_duration == -1),
                                         number_new_infected,
                                         replace = FALSE)] <- 0
     
-    animals$age <- animals$age + 1
+    # TODO: move this whole thing outside (update function)
+    animals$age <- animals$age + 1  
     animals <- animals %>%
       mutate(
-        days_since_infection =
-          ifelse(days_since_infection != -1, days_since_infection + 1,-1),
-        infected = days_since_infection != -1,
-        esbl = ifelse(
-          days_since_infection == 1,
-          sum(sum_environment) / sum(sum_feces) * ingested_feces,
-          esbl
+        infection_duration =
+          ifelse(infection_duration != -1, infection_duration + 1,-1),
+        B_infection_status = infection_duration != -1,
+        C_esbl_gut = ifelse(
+          infection_duration == 1,
+          sum(C_sum_esbl_env) / sum(sum_feces_gut) * ingested_feces,
+          C_esbl_gut
         )
       )
     
@@ -110,9 +112,9 @@ new.farm_module <- function(input_list = load_inputs()){
         min = input_list$water_consum.min[day] ,
         max = input_list$water_consum.max[day]
       ) * input_list$water_reduction + input_list$daily_intake[day] - input_list$daily_gain[day]
-    animals$content <- feces_amount
+    animals$feces_gut <- feces_amount
     
-    animals$sum_feces <- animals$sum_feces + feces_amount
+    animals$sum_feces_gut <- animals$sum_feces_gut + feces_amount
     
     return(animals)
     
@@ -136,17 +138,17 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Excretion function
   fm$excretion <- function(animals) {
     
-    content <- animals$content
-    esbl <- animals$esbl
+    #feces_gut <- animals$feces_gut
+    #C_esbl_gut <- animals$C_esbl_gut
     
     excretion_cfu <-
       animals %>% mutate(
-        cfu_environment = ifelse(days_since_infection != -1, esbl * input_list$e_rate, 0),
-        sum_environment = sum_environment + cfu_environment - (
-          animals$ingested_feces * sum(sum_environment) / sum(sum_feces)
+        C_esbl_env = ifelse(infection_duration != -1, C_esbl_gut * input_list$e_rate, 0),
+        C_sum_esbl_env = C_sum_esbl_env + C_esbl_env - (
+          animals$ingested_feces * sum(C_sum_esbl_env) / sum(sum_feces_gut)
         ),
-        esbl = esbl - cfu_environment  + (
-          animals$ingested_feces * sum(sum_environment) / sum(sum_feces)
+        C_esbl_gut = C_esbl_gut - C_esbl_env  + (
+          animals$ingested_feces * sum(C_sum_esbl_env) / sum(sum_feces_gut)
         )
       )
   }
@@ -155,10 +157,10 @@ new.farm_module <- function(input_list = load_inputs()){
   fm$environmental_decay <- function(animals) {
     
     animals %>%
-      mutate(sum_environment = ifelse(
-        days_since_infection != -1,
-        sum_environment * (1 - input_list$ed_rate),
-        sum_environment
+      mutate(C_sum_esbl_env = ifelse(
+        infection_duration != -1,
+        C_sum_esbl_env * (1 - input_list$ed_rate),
+        C_sum_esbl_env
       ))
   }
   
