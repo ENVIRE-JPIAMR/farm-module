@@ -15,9 +15,11 @@ new.farm_module <- function(input_list = load_inputs()){
     
     # Number of animals depending on broiler density and farm size
     n_animals <- input_list$farm_density/input_list$target_weight*input_list$farm_size
+    n_animals_infected <- rbinom(1, n_animals, input_list$prevalence)
+    n_animals_healthy  <- n_animals - n_animals_infected
     
-    animals <- rbind(sick[rep(1, round(n_animals * input_list$prevalence)), ],
-                     healthy[rep(1, round(n_animals * (1 - input_list$prevalence))), ]) %>% mutate(
+    animals <- rbind(sick[rep(1, n_animals_infected), ],
+                     healthy[rep(1, n_animals_healthy), ]) %>% mutate(
                        feces_gut = 0,
                        sum_feces_gut = 0,
                        C_esbl_gut = ifelse(
@@ -58,7 +60,7 @@ new.farm_module <- function(input_list = load_inputs()){
         feces = sum(sum_feces_gut),
         env_fec = log10(environment / feces)
       ) %>% pull(env_fec)
-    
+    #TODO: what happens if there is no infected day 1 chicks ?
     foi <- input_list$beta.mean * sum_excretion_concentration
     #in the study of dame korevaar the density was blabla and in this simulation...
     #100/8 m2, factor my density/density study 
@@ -126,7 +128,7 @@ new.farm_module <- function(input_list = load_inputs()){
     
   ## Amount of feces ingested per day
   fm$ingested_feces <- function(animals) {
-    
+    #TODO: What happens in Day 1 ?
     ingested <-
       rpert(
         nrow(animals),
