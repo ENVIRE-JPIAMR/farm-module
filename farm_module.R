@@ -41,11 +41,10 @@ new.farm_module <- function(input_list = load_inputs()){
     K <- input_list$K * animals$feces_gut
     r <- 10 ^ runif(1, input_list$r.min, input_list$r.max)
     
-    #TODO: Fix this
     animals %>%
       mutate(C_esbl_gut = ifelse(infection_duration != -1,
                            K / (
-                             1 + ((K - C_esbl_gut) / C_esbl_gut) * exp(-r * infection_duration)
+                             1 + ((K - C_esbl_gut) / C_esbl_gut) * exp(-r)
                            ),
                            C_esbl_gut))
   }
