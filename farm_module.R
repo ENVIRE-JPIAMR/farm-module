@@ -14,7 +14,7 @@ new.farm_module <- function(input_list = load_inputs()){
     sick    <- tribble(~ infection_duration, ~ age, 1, 1)
     
     # Number of animals depending on broiler density and farm size
-    n_animals <- input_list$farm_density/input_list$target_weight*input_list$farm_size
+    n_animals <- round(input_list$farm_density/input_list$target_weight*input_list$farm_size)
     n_animals_infected <- rbinom(1, n_animals, input_list$prevalence)
     n_animals_healthy  <- n_animals - n_animals_infected
     
