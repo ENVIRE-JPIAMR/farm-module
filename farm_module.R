@@ -26,7 +26,6 @@ new.farm_module <- function(input_list = load_inputs()){
                          input_list$esbl.max
                        ),
                        C_sum_esbl_env = 0,
-                       density = input_list$farm_density,
                        B_infection_status = infection_duration != -1,
                        ingested_feces = 0,
                        C_esbl_env = 0
@@ -63,7 +62,8 @@ new.farm_module <- function(input_list = load_inputs()){
     
     foi <- input_list$beta.mean * sum_excretion_concentration
     #in the study of dame korevaar the density was blabla and in this simulation...
-    #100/8 m2, factor my density/density study
+    #100/8 m2, factor my density/density study 
+    #TODO: What is this comment?
     return(foi)
   }
 
@@ -168,6 +168,8 @@ new.farm_module <- function(input_list = load_inputs()){
         C_sum_esbl_env
       ))
   }
+  
+  #TODO: fm$run
   
   return(fm)
   
