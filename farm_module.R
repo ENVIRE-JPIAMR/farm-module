@@ -53,14 +53,15 @@ new.farm_module <- function(input_list = load_inputs()){
   
   ## Force of infection
   fm$force_of_infection <- function(animals) {
+    
     sum_excretion_concentration <- animals %>%
       filter(infection_duration != -1) %>%
       summarise(
         environment = sum(C_sum_esbl_env),
         feces = sum(sum_feces_gut),
-        env_fec = log10(environment / feces)
+        env_fec = ifelse(environment == 0, 0, log10(environment / feces))
       ) %>% pull(env_fec)
-    #TODO: what happens if there is no infected day 1 chicks ?
+
     foi <- input_list$beta.mean * sum_excretion_concentration
     #in the study of dame korevaar the density was blabla and in this simulation...
     #100/8 m2, factor my density/density study 
@@ -143,9 +144,6 @@ new.farm_module <- function(input_list = load_inputs()){
   
   ## Excretion function
   fm$excretion <- function(animals) {
-    
-    #feces_gut <- animals$feces_gut
-    #C_esbl_gut <- animals$C_esbl_gut
     
     excretion_cfu <-
       animals %>% mutate(
