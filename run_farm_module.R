@@ -2,8 +2,6 @@ source("load_libraries.R")
 source("load_inputs.R")
 source("farm_module.R")
 
-set.seed(1)
-
 ## Function to simulate one production batch
 ## generates 4 outputs for all production days
 ## 1) prevalence     := Proportion of infected broilers 
