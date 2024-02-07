@@ -3,11 +3,12 @@ source("load_inputs.R")
 source("farm_module.R")
 
 ## Function to simulate one production batch
-## generates 4 outputs for all production days
+## generates 5 outputs for all production days
 ## 1) prevalence     := Proportion of infected broilers 
 ## 2) load           := Total ESBL E. coli in the environment (CFU)
 ## 3) total_feces    := Total amount of feces in broiler's gut (g)
-## 4) total_esbl_gut := Total ESBL E. coli in broiler's gut (CFU)
+## 4) concentration  := load/total_feces
+## 5) total_esbl_gut := Total ESBL E. coli in broiler's gut (CFU)
 batch_simulator <- function(farm_module = new.farm_module()) {
   
   # initialization
@@ -24,6 +25,7 @@ batch_simulator <- function(farm_module = new.farm_module()) {
     output$prevalence     <- c(output$prevalence, sum(animals$B_infection_status)/nrow(animals))
     output$load           <- c(output$load, sum(animals$C_sum_esbl_env))
     output$total_feces    <- c(output$total_feces, sum(animals$sum_feces_gut))
+    output$concentration  <- c(output$concentration, sum(animals$C_sum_esbl_env)/sum(animals$sum_feces_gut))
     output$total_esbl_gut <- c(output$total_esbl_gut, sum(animals$C_esbl_gut))
     
     # update day index
