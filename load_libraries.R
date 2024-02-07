@@ -12,7 +12,8 @@ if (install_libraries)
     "mc2d",
     "future",
     "furrr",
-    "scales")
+    "scales",
+    "ggplot2")
   )
 }
 
@@ -25,6 +26,7 @@ library(mc2d)      # for pert distribution
 library(future)
 library(furrr)
 library(scales)
+library(ggplot2)   # for visualization
 
 ## Cleanup
 rm("install_libraries")
