@@ -19,7 +19,7 @@ water_consum.mean;Estimated;OBJECT;Mean water consumption;Avian advice, Universi
 weight;Estimated;OBJECT;Broiler's average daily weight;Ross308 performance objectives. (2022);g;c(81, 102, 125, 151, 181, 213, 249, 288, 330, 376, 425, 477, 533, 592, 655, 720, 789, 860, 935, 1012, 1092, 1174, 1258, 1345, 1434, 1524, 1616, 1710, 1805, 1901, 1999, 2097, 2196, 2296, 2396, 2496)
 daily_gain;Estimated;OBJECT;Broiler's average daily gain in weight;Ross308 performance objectives. (2022);g;c(19, 21, 23, 26, 29, 32, 36, 39, 42, 46, 49, 52, 56, 59, 62, 66, 69, 72, 74, 77, 80, 82, 85, 87, 89, 91, 92, 94, 95, 96, 97, 98, 99, 100, 100, 100)
 daily_intake;Estimated;OBJECT;Broilers average feed intake;Ross308 performance objectives. (2022);g;c(16, 20, 24, 27, 31, 35, 39, 44, 48, 52, 57, 62, 67, 72, 77, 83, 88, 94, 100, 105, 111, 117, 122, 128, 134, 139, 145, 150, 156, 161, 166, 171, 176, 180, 185, 189)
-n_sim;Selected;DOUBLE;Number of Monte Carlo simulations;User defined;unit ;100
+n_sim;Selected;DOUBLE;Number of Monte Carlo simulations;User defined;unit ;1000
 farm_size;Selected;DOUBLE;Size of the farm;User defined;m2;100
 farm_density;Selected;DOUBLE;Maxium number of broiler per m2;Becker et al. (2022);unit/m2;39
 target_weight;Selected;DOUBLE;Weight of the broilers at the end of the fattening period (36-th day);Becker et al. (2022);kg;2.332
