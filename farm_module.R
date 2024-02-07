@@ -168,7 +168,19 @@ new.farm_module <- function(input_list = load_inputs()){
       ))
   }
   
-  #TODO: fm$run
+  ## Function to run farm module for a particular day
+  fm$run <- function(animals, day){
+    
+    animals <- fm$feces_function (day,animals)
+    animals <- fm$ingested_feces(animals)
+    animals <- fm$excretion(animals)
+    animals <- fm$logistic_growth(animals)
+    animals <- fm$new_infected(animals)
+    animals <- fm$environmental_decay(animals)
+    animals <- fm$update_df(animals)
+    
+    return(animals)
+  }
   
   return(fm)
   

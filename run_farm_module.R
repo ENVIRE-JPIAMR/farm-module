@@ -2,48 +2,35 @@ source("load_libraries.R")
 source("load_inputs.R")
 source("farm_module.R")
 
-set.seed(123)
+set.seed(1)
 
-## Load farm module
-farm_module <- new.farm_module()
-
-animals <- farm_module$initialize_df()   
-initial_animals <- animals
-
-## Function to simulate a production day
-simulate_day <- function(animals, day, until) {
+## Function to simulate one production batch
+## generates 4 outputs for all production days
+## 1) prevalence     := Proportion of infected broilers 
+## 2) load           := Total ESBL E. coli in the environment (CFU)
+## 3) total_feces    := Total amount of feces in broiler's gut (g)
+## 4) total_esbl_gut := Total ESBL E. coli in broiler's gut (CFU)
+batch_simulator <- function(farm_module = new.farm_module()) {
   
-  animals <- farm_module$feces_function (day,animals)
-  animals <- farm_module$ingested_feces(animals)
-  animals <- farm_module$excretion(animals)
-  animals <- farm_module$logistic_growth(animals)
-  animals <- farm_module$new_infected(animals)
-  animals <- farm_module$environmental_decay(animals)
-  animals <- farm_module$update_df(animals)
+  # initialization
+  animals <- farm_module$initialize_df() 
+  day_idx <- farm_module$params$day.min
+  output  <- list()
   
-  if (day < until) 
-    c(list(animals), simulate_day(animals, day = day + 1, until = until)) 
-  else return(list(animals))
+  while (day_idx < farm_module$params$day.max) {
+    
+    # run farm module for day_idx and update animals dataframe
+    animals <- farm_module$run(animals, day_idx)
+    
+    # store daily outputs
+    output$prevalence     <- c(output$prevalence, sum(animals$B_infection_status)/nrow(animals))
+    output$load           <- c(output$load, sum(animals$C_sum_esbl_env))
+    output$total_feces    <- c(output$total_feces, sum(animals$sum_feces_gut))
+    output$total_esbl_gut <- c(output$total_esbl_gut, sum(animals$C_esbl_gut))
+    
+    # update day index
+    day_idx <- day_idx + 1
+  } 
+  
+  return(output)
 }
-
-## MC simulations
-montecarlo <- map(1:farm_module$params$n_sim, .progress = TRUE, function(x) {
-  simulated_days <-
-    simulate_day(animals = animals,
-                 day = farm_module$params$day.min,
-                 until = farm_module$params$day.max)
-  c(list(initial_animals), simulated_days)
-})
- 
-## Data frame with the results of the Monte Carlo simulation
-df_montecarlo <-
-  montecarlo |> map(bind_rows, .id = "day",  .progress = TRUE) |> bind_rows(.id = "groups") |>  mutate(day = as.numeric(day)) |> group_by(groups)
-
-## Summarize the results of the Monte Carlo simulation
-result <- df_montecarlo |>
-  group_by(day, groups) |>
-  summarise(
-    C_sum_esbl_env = sum(C_sum_esbl_env, na.rm = TRUE),
-    sum_feces_gut = sum(sum_feces_gut),
-    C_esbl_gut = sum(C_esbl_gut)
-  )
