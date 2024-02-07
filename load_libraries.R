@@ -13,7 +13,10 @@ if (install_libraries)
     "future",
     "furrr",
     "scales",
-    "ggplot2")
+    "ggplot2",
+    "doSNOW",
+    "foreach",
+    "parallel")
   )
 }
 
@@ -21,12 +24,17 @@ if (install_libraries)
 ## LOAD LIBRARIES ##
 ####################
 
-library(tidyverse) # for data cleaning and plotting
-library(mc2d)      # for pert distribution
+library(tidyverse)    # for data cleaning and plotting
+library(mc2d)         # for pert distribution
 library(future)
 library(furrr)
 library(scales)
-library(ggplot2)   # for visualization
+library(ggplot2)      # for visualization
+library(doSNOW)       # for parallelization
+library(foreach)      # for parallelization
+library(parallel)     # for parallelization
+library(abind)        # for parallelization bind function
+
 
 ## Cleanup
 rm("install_libraries")
