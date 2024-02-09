@@ -4,10 +4,6 @@ This repository provides code and data to for the
 QMRA model for the farm module, intended to quantify
 ESBL producing E. coli in broiler manure.
 
-## Table of contents
-
-  * [Directory layout](#directory-layout)
-
 ## Directory layout
 
 There is one subdirectory in this repository:
