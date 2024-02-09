@@ -1,6 +1,6 @@
-source("load_libraries.R")
-source("load_inputs.R")
-source("farm_module.R")
+source(here::here("load_libraries.R"))
+source(here::here("load_inputs.R"))
+source(here::here("farm_module.R"))
 
 ## Function to simulate one production batch
 ## generates 7 outputs for all days (QoIs from Becker et al. (2022))

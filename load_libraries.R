@@ -16,7 +16,8 @@ if (install_libraries)
     "ggplot2",
     "doSNOW",
     "foreach",
-    "parallel")
+    "parallel",
+    "here")
   )
 }
 
@@ -34,6 +35,7 @@ library(doSNOW)       # for parallelization
 library(foreach)      # for parallelization
 library(parallel)     # for parallelization
 library(abind)        # for parallelization bind function
+library(here)         # for script sourcing issues
 
 
 ## Cleanup

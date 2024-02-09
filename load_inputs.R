@@ -3,7 +3,8 @@
 load_inputs <- function() {
   
   ## read input variables
-  df_read <- read.csv("inputs.csv", header = TRUE, sep = ';')
+  input_file <- here("inputs.csv")
+  df_read <- read.csv(input_file, header = TRUE, sep = ';')
   
   ## parsing objects from input list
   input_objects = list(
