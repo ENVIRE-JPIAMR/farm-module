@@ -51,59 +51,55 @@ new.farm_module <- function(input_list = load_inputs()){
                            ),
                            C_esbl_gut))
   }
-  
-  ## Force of infection
-  fm$force_of_infection <- function(animals) {
-    
-    sum_excretion_concentration <- animals %>%
-      filter(infection_duration != -1) %>%
-      summarise(
-        environment = sum(C_sum_esbl_env),
-        feces = sum(sum_feces_env),
-        env_fec = ifelse(environment == 0, 0, log10(environment / feces))
-      ) %>% pull(env_fec)
 
-    foi <- fm$params$beta.mean * sum_excretion_concentration
-    #in the study of dame korevaar the density was blabla and in this simulation...
-    #100/8 m2, factor my density/density study 
-    #TODO: What is this comment?
-    return(foi)
-  }
-
-  ## Infection model 3, based on bacteria cfu in the environment
+  ## Transmission model (Dame-Korevaar et al. (2019)) based on bacteria 
+  ## concentration in the environment
   fm$new_infected <- function(animals) {
     
-    foi <- fm$force_of_infection(animals)
+    # compute ESBL E. coli concentration in contaminated feces
+    total_inf_feces <-
+      sum(animals$sum_feces_env[which(animals$infection_duration == -1)])
     
-    num_negatives <- sum(animals$infection_duration == -1)
-    number_new_infected <-
-      round(num_negatives * (1 - exp(-foi * fm$params$Dt)))
-    number_new_infected <- max(0, number_new_infected)
+    esbl_conc_feces <-
+      ifelse(total_inf_feces > 0,
+             sum(animals$C_sum_esbl_env) / total_inf_feces,
+             0)
+    
+    # compute force of infection
+    foi <- ifelse(esbl_conc_feces == 0,
+                  0,
+                  log10(esbl_conc_feces))
+    
+    # compute newly infected broilers
+    N_susceptible <- sum(animals$infection_duration == -1)
+    
+    N_new_infected <-
+      round(N_susceptible * (1 - exp(-foi * fm$params$Dt)))
+    
+    N_new_infected <- max(0, N_new_infected)
     
     
-    if (number_new_infected >= num_negatives) {
-      number_new_infected <- num_negatives
+    if (N_new_infected >= N_susceptible) {
+      N_new_infected <- N_susceptible
     }
     
-    # update infection duration for new infected broilers
+    # update infection duration for newly infected broilers
     animals$infection_duration[sample(which(animals$infection_duration == -1),
-                                        number_new_infected,
+                                        N_new_infected,
                                         replace = FALSE)] <- 0
     
-    # compute ESBL E. coli concentration in environmental feces
-    esbl_conc_env <-
-      ifelse(
-        sum(animals$sum_feces_env) > 0,
-        sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_env),
-        0
-      )
+    # Assumption: only newly infected broilers ingest infected feces.
     
     # total ESBL E. coli ingested by all broilers that gets newly infected
     total_esbl <-
-      sum(esbl_conc_env * animals$ingested_feces[which(animals$infection_duration == 0)])
+      sum(esbl_conc_feces * animals$ingested_feces[which(animals$infection_duration == 0)])
     
     # total feces ingested by doner broilers
     total_doner_feces <- sum(animals$ingested_feces[which(animals$infection_duration > 0)])
+    
+    # Assumption: the ESBL E. coli ingested by newly infected broilers comes form the 
+    #             infected feces in the environment. L114 distributes the source
+    #             according to the ingestion proportion of previously infected broilers.
     
     # update variables for ESBL E. coli infected broilers
     animals <- animals %>%
@@ -111,11 +107,11 @@ new.farm_module <- function(input_list = load_inputs()){
         B_infection_status = infection_duration != -1,
         C_esbl_gut = ifelse(
           infection_duration == 0,
-          C_esbl_gut + esbl_conc_env * ingested_feces,
+          C_esbl_gut + esbl_conc_feces * ingested_feces,
           C_esbl_gut),
         C_sum_esbl_env = ifelse(
           infection_duration > 0,
-          C_sum_esbl_env - ingested_feces * total_esbl / total_doner_feces,
+          C_sum_esbl_env - total_esbl * ingested_feces / total_doner_feces,
           C_sum_esbl_env)
       )
     
@@ -131,8 +127,8 @@ new.farm_module <- function(input_list = load_inputs()){
         min = fm$params$water_consum.min[day] ,
         max = fm$params$water_consum.max[day]
       ) * fm$params$water_reduction + fm$params$daily_intake[day] - fm$params$daily_gain[day]
-    animals$feces_gut <- feces_amount
     
+    animals$feces_gut     <- feces_amount
     animals$sum_feces_gut <- animals$sum_feces_gut + feces_amount
     
     return(animals)
