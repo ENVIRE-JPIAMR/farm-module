@@ -13,12 +13,12 @@ animals <- fm$initialize_df()
 day <- fm$params$day.min
 
 # step chronology
-animals.ingested_feces      <- fm$ingested_feces(day, animals)
-animals.new_infected        <- fm$new_infected(animals.ingested_feces)
-animals.feces_function      <- fm$feces_function(day, animals.new_infected)
-animals.logistic_growth     <- fm$logistic_growth(animals.feces_function)
-animals.excretion           <- fm$excretion(animals.logistic_growth)
-animals.environmental_decay <- fm$environmental_decay(animals.excretion)
+animals.feces_production    <- fm$feces_production(day, animals)
+animals.feces_ingestion     <- fm$feces_ingestion(day, animals.feces_production)
+animals.excretion           <- fm$excretion(animals.feces_ingestion)
+animals.logistic_growth     <- fm$logistic_growth(animals.excretion)
+animals.transmission        <- fm$transmission(animals.logistic_growth)
+animals.environmental_decay <- fm$environmental_decay(animals.transmission)
 
 # update
 animals.environmental_decay$age <- animals.environmental_decay$age + 1
@@ -28,10 +28,10 @@ animals.environmental_decay$infection_duration <-
          -1)
 
 # next day
-animals.ingested_feces      <- fm$ingested_feces(day, animals.environmental_decay)
-animals.new_infected        <- fm$new_infected(animals.ingested_feces)
-animals.feces_function      <- fm$feces_function(day, animals.new_infected)
-animals.logistic_growth     <- fm$logistic_growth(animals.feces_function)
-animals.excretion           <- fm$excretion(animals.logistic_growth)
-animals.environmental_decay <- fm$environmental_decay(animals.excretion)
+animals.feces_production    <- fm$feces_production(day, animals.environmental_decay)
+animals.feces_ingestion     <- fm$feces_ingestion(day, animals.feces_production)
+animals.excretion           <- fm$excretion(animals.feces_ingestion)
+animals.logistic_growth     <- fm$logistic_growth(animals.excretion)
+animals.transmission        <- fm$transmission(animals.logistic_growth)
+animals.environmental_decay <- fm$environmental_decay(animals.transmission)
 

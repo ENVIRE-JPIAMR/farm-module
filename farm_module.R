@@ -7,7 +7,7 @@ new.farm_module <- function(input_list = load_inputs()){
   # initialize farm module parameters
   fm$params <- input_list
   
-  ## Initialize the animals df: n_row = num(animals)
+  ## Initialization of the animals df: n_row = num(animals)
   fm$initialize_df <- function() {
     
     healthy <- tribble(~ infection_duration, ~ age, -1, 1)
@@ -39,7 +39,7 @@ new.farm_module <- function(input_list = load_inputs()){
     
   }
   
-  ## Bacteria logistic growth function inside broiler's gut
+  ## Bacteria logistic growth
   fm$logistic_growth <- function(animals) {
     
     K <- fm$params$K * animals$feces_gut
@@ -53,9 +53,8 @@ new.farm_module <- function(input_list = load_inputs()){
                            C_esbl_gut))
   }
 
-  ## Transmission model (Dame-Korevaar et al. (2019)) based on bacteria 
-  ## concentration in the environment
-  fm$new_infected <- function(animals) {
+  ## Bacteria transmission (Dame-Korevaar et al. (2019)) 
+  fm$transmission <- function(animals) {
     
     # compute ESBL E. coli concentration in contaminated feces
     esbl_conc_feces <-
@@ -116,8 +115,8 @@ new.farm_module <- function(input_list = load_inputs()){
     return(animals)
   }
 
-  ## Quantity of feces produced by a broiler per day
-  fm$feces_function <- function(day, animals) {
+  ## Feces production inside broilers' gut
+  fm$feces_production <- function(day, animals) {
     
     feces_amount <-
       runif(
@@ -133,8 +132,8 @@ new.farm_module <- function(input_list = load_inputs()){
     
   }
     
-  ## Amount of feces ingested per day
-  fm$ingested_feces <- function(day, animals) {
+  ## Feces ingestion
+  fm$feces_ingestion <- function(day, animals) {
     
     # ingested feces is not necessarily ESBL E. coli contaminated (see assumptions)
     animals$ingested_feces <-
@@ -144,7 +143,7 @@ new.farm_module <- function(input_list = load_inputs()){
     return(animals)
   }
   
-  ## Excretion function
+  ## Excretion
   fm$excretion <- function(animals) {
     
     animals %>% mutate(
@@ -170,11 +169,11 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Function to run farm module for a particular day
   fm$run <- function(animals, day){
     
-    animals <- fm$feces_function(day,animals)
-    animals <- fm$ingested_feces(day, animals)
+    animals <- fm$feces_production(day,animals)
+    animals <- fm$feces_ingestion(day, animals)
     animals <- fm$excretion(animals)
     animals <- fm$logistic_growth(animals)
-    animals <- fm$new_infected(animals)
+    animals <- fm$transmission(animals)
     animals <- fm$environmental_decay(animals)
     
     animals$age <- animals$age + 1
