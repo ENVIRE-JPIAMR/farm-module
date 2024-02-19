@@ -13,7 +13,7 @@ animals <- fm$initialize_df()
 day <- fm$params$day.min
 
 # step chronology
-animals.ingested_feces      <- fm$ingested_feces(animals)
+animals.ingested_feces      <- fm$ingested_feces(day, animals)
 animals.new_infected        <- fm$new_infected(animals.ingested_feces)
 animals.feces_function      <- fm$feces_function(day, animals.new_infected)
 animals.logistic_growth     <- fm$logistic_growth(animals.feces_function)
@@ -28,7 +28,7 @@ animals.environmental_decay$infection_duration <-
          -1)
 
 # next day
-animals.ingested_feces      <- fm$ingested_feces(animals.environmental_decay)
+animals.ingested_feces      <- fm$ingested_feces(day, animals.environmental_decay)
 animals.new_infected        <- fm$new_infected(animals.ingested_feces)
 animals.feces_function      <- fm$feces_function(day, animals.new_infected)
 animals.logistic_growth     <- fm$logistic_growth(animals.feces_function)

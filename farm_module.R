@@ -136,18 +136,12 @@ new.farm_module <- function(input_list = load_inputs()){
   }
     
   ## Amount of feces ingested per day
-  fm$ingested_feces <- function(animals) {
+  fm$ingested_feces <- function(day, animals) {
     
-    # ingested feces is not necessarily ESBL E. coli contaminated
-    # TODO: Becker et al. (2022) has a better approach
-    # TODO: For day 1 it should be zero (detail)
+    # ingested feces is not necessarily ESBL E. coli contaminated (see assumptions)
     animals$ingested_feces <-
-      rpert(
-        nrow(animals),
-        fm$params$ingested_feces.min ,
-        fm$params$ingested_feces.mode,
-        fm$params$ingested_feces.max
-      ) #+ log(animals$age)
+      rep(fm$params$daily_intake[day] * fm$params$ingestion_rate,
+          nrow(animals))
     
     return(animals)
   }
@@ -177,7 +171,7 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Function to run farm module for a particular day
   fm$run <- function(animals, day){
     
-    animals <- fm$ingested_feces(animals)
+    animals <- fm$ingested_feces(day, animals)
     animals <- fm$new_infected(animals)
     animals <- fm$feces_function(day,animals)
     animals <- fm$logistic_growth(animals)
