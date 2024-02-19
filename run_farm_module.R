@@ -37,7 +37,7 @@ batch_simulator <- function(farm_module = new.farm_module()) {
     output$total_feces       <- c(output$total_feces, sum(animals$sum_feces_gut))
     output$avg_esbl_gut      <- c(output$avg_esbl_gut, mean(animals$C_esbl_gut))
     output$avg_esbl_env      <- c(output$avg_esbl_env, mean(animals$C_esbl_excreted))
-    output$avg_esbl_ingested <- c(output$avg_esbl_ingested, mean(animals$ingested_feces) * sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_gut))
+    output$avg_esbl_ingested <- c(output$avg_esbl_ingested, mean(animals$ingested_feces) * sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_gut)) #TODO: faut corriger
     
     # update day index
     day_idx <- day_idx + 1
