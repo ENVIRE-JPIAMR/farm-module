@@ -23,6 +23,7 @@ new.farm_module <- function(input_list = load_inputs()){
                        feces_gut = 0,
                        sum_feces_gut = 0,
                        sum_feces_env = 0,
+                       sum_feces_cont_env = 0,
                        C_esbl_gut = ifelse(
                          infection_duration == -1,
                          fm$params$esbl.min,
@@ -57,12 +58,9 @@ new.farm_module <- function(input_list = load_inputs()){
   fm$new_infected <- function(animals) {
     
     # compute ESBL E. coli concentration in contaminated feces
-    total_inf_feces <-
-      sum(animals$sum_feces_env[which(animals$infection_duration == -1)])
-    
     esbl_conc_feces <-
-      ifelse(total_inf_feces > 0,
-             sum(animals$C_sum_esbl_env) / total_inf_feces,
+      ifelse(sum(animals$sum_feces_cont_env) > 0,
+             sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_cont_env),
              0)
     
     # compute force of infection
@@ -111,7 +109,7 @@ new.farm_module <- function(input_list = load_inputs()){
           C_esbl_gut),
         C_sum_esbl_env = ifelse(
           infection_duration > 0,
-          C_sum_esbl_env - total_esbl * ingested_feces / total_doner_feces,
+          C_sum_esbl_env - (total_esbl * ingested_feces) / total_doner_feces,
           C_sum_esbl_env)
       )
     
@@ -150,10 +148,11 @@ new.farm_module <- function(input_list = load_inputs()){
   fm$excretion <- function(animals) {
     
     animals %>% mutate(
-      C_esbl_excreted = ifelse(infection_duration != -1, C_esbl_gut * fm$params$e_rate, 0),
-      C_sum_esbl_env  = C_sum_esbl_env + C_esbl_excreted,
-      C_esbl_gut      = C_esbl_gut - C_esbl_excreted,
-      sum_feces_env   = sum_feces_gut
+      C_esbl_excreted    = ifelse(infection_duration != -1, C_esbl_gut * fm$params$e_rate, 0),
+      C_sum_esbl_env     = C_sum_esbl_env + C_esbl_excreted,
+      C_esbl_gut         = C_esbl_gut - C_esbl_excreted,
+      sum_feces_env      = sum_feces_gut,
+      sum_feces_cont_env = ifelse(infection_duration != -1, sum_feces_env, 0)
     )
   }
   
@@ -171,11 +170,11 @@ new.farm_module <- function(input_list = load_inputs()){
   ## Function to run farm module for a particular day
   fm$run <- function(animals, day){
     
-    animals <- fm$ingested_feces(day, animals)
-    animals <- fm$new_infected(animals)
     animals <- fm$feces_function(day,animals)
-    animals <- fm$logistic_growth(animals)
+    animals <- fm$ingested_feces(day, animals)
     animals <- fm$excretion(animals)
+    animals <- fm$logistic_growth(animals)
+    animals <- fm$new_infected(animals)
     animals <- fm$environmental_decay(animals)
     
     animals$age <- animals$age + 1
