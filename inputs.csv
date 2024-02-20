@@ -2,9 +2,6 @@ Variable;Category;Type;Description;Source;Unit;Value
 esbl.min;Estimated;DOUBLE;Minimum intestinal load of ESBL producing E. coli in the broiler's intestine;Author's estimate;CFU;0
 esbl.max;Estimated;DOUBLE;Maximum intestinal load of ESBL producing E. coli in the broiler's intestine;Becker et al. (2022);CFU;100
 water_reduction;Estimated;DOUBLE;Proportion of ingested water lost by exhalation;Becker et al. (2022);proportion;0.7
-ingested_feces.min;Estimated;DOUBLE;Minimum amount of feces ingested daily by a random bird;Collineau et al. (2020);g/day;0
-ingested_feces.max;Estimated;DOUBLE;Maximum amount of feces ingested daily by a random bird;Collineau et al. (2020);g/day;2
-ingested_feces.mode;Estimated;DOUBLE;Mode amount of feces ingested daily by a random bird;Collineau et al. (2020);g/day;0.05
 e_rate;Estimated;DOUBLE;Excretion rate of ESBL E. coliw.r.t the total amount of ESBL E. coli in the intestinal content;Becker et al. (2022);%;0.3
 day.min;Estimated;DOUBLE;Starting day;User defined;day;1
 day.max;Estimated;DOUBLE;Total duration of the fattening period;Becker et al. (2022);day;36
