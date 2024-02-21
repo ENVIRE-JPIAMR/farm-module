@@ -63,7 +63,6 @@ scenario_2_breach_biosecurity <- function(animals, probability, cfu_entering) {
   return(animals)
 }
 
-### in this scenario they do not excrete
 scenario_3_resistance_selection <- function(animals) {
   # Generate a random selection probability for each animal (0.5% to 2%)
   selection_probabilities <- runif(nrow(animals), 0.005, 0.02)
