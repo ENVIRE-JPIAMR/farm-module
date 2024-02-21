@@ -34,7 +34,7 @@ scenario_1_flock_infected <- function(animals, prevalence, cfu) {
   
   # Update the animals data frame for the selected animals
   animals$infected[positive_indices] <- TRUE
-  animals$days_since_infection[positive_indices] <- 1  # Assuming day 1 is the day of infection
+  animals$days_since_infection[positive_indices] <- 1
   
   # Check if cfu is a single value or a vector
   if(length(cfu) == 1) {
@@ -80,7 +80,7 @@ scenario_3_resistance_selection <- function(animals) {
   
   # Update the 'infected' status for animals where selection occurs and esbl_increase is applied
   animals$infected[selection_occurs] <- TRUE
-  
+  animals$days_since_infection[selection_occurs] <- 1 
   return(animals)
 }
 
