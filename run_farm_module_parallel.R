@@ -7,33 +7,29 @@ source(here::here("farm_module.R"))
 
 batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim) {
   
-  # custom bind function
-  mybind <- function(matrix1, matrix2) {
-      abind(matrix1, matrix2, along = 3)
-    }
-
-  # setup parallel backend to use many cores
-  cores = detectCores()
-  cl <- makeCluster(cores[1]/2)
+  # Setup parallel backend to use many cores
+  cores <- detectCores()
+  cl <- makeCluster(cores[1]/2)  # Modify if necessary based on your system's resources
   registerDoSNOW(cl)
   
   pb <- txtProgressBar(min = 0, max = n_sim, style = 3)
-  progress <- function(n_sim)
-    setTxtProgressBar(pb, n_sim)
+  progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
   
-  day_max <- farm_module$params$day.max
-  
-  # Initialize a 3D array to store results 
-  # TODO: remove hard coded dimension
-  output <- array(0, dim = c(day_max - 1, n_sim, 7))  
-  
-  output <- foreach(i = 1:n_sim, .combine = mybind, .options.snow = opts) %dopar% {
+  # Run simulations in parallel and collect results
+  results <- foreach(i = 1:n_sim, .combine = 'c', .options.snow = opts, .multicombine = TRUE, .inorder = FALSE) %dopar% {
     source(here::here("run_farm_module.R"))
-    batch_output <- do.call(cbind, batch_simulator(farm_module))
+    batch_output <- batch_simulator(farm_module)
     
-    return(batch_output)
+    # Return the full output including animals_daily list
+    return(list(batch_output$animals_daily))
   }
   
-  return(output)
+  stopCluster(cl)
+  close(pb)
+  
+  # Organize the results into a more structured list if needed
+  # results will be a list of lists, each containing animals_daily dataframes
+  
+  return(results)
 }
