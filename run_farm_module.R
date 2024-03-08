@@ -24,8 +24,9 @@ batch_simulator <- function(farm_module = new.farm_module()) {
   animals <- farm_module$initialize_df() 
   day_idx <- farm_module$params$day.min
   output  <- list()
+  animals_daily <- list() # Initialize a list to store animals df for each day
   
-  while (day_idx < farm_module$params$day.max) {
+  while (day_idx <= farm_module$params$day.max) {
     
     # run farm module for day_idx and update animals dataframe
     animals <- farm_module$run(animals, day_idx)
@@ -33,15 +34,23 @@ batch_simulator <- function(farm_module = new.farm_module()) {
     # store daily outputs
     output$load              <- c(output$load, sum(animals$C_sum_esbl_env))
     output$prevalence        <- c(output$prevalence, sum(animals$B_infection_status)/nrow(animals))  
-    output$avg_esbl_feces    <- c(output$avg_esbl_feces, mean(animals$C_esbl_env/animals$feces_gut))  
+    output$avg_esbl_feces    <- c(output$avg_esbl_feces, mean(animals$C_esbl_excreted/animals$feces_gut))  
     output$total_feces       <- c(output$total_feces, sum(animals$sum_feces_gut))
     output$avg_esbl_gut      <- c(output$avg_esbl_gut, mean(animals$C_esbl_gut))
-    output$avg_esbl_env      <- c(output$avg_esbl_env, mean(animals$C_esbl_env))
+    output$avg_esbl_env      <- c(output$avg_esbl_env, mean(animals$C_esbl_excreted))
     output$avg_esbl_ingested <- c(output$avg_esbl_ingested, mean(animals$ingested_feces) * sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_gut))
+    
+    # Store animals dataframe for the current day
+    animals$day <- rep(day_idx, nrow(animals)) # puts the day for each animal
+    
+    animals_daily[[day_idx]] <- animals   # stores the animals dataframe
     
     # update day index
     day_idx <- day_idx + 1
   } 
+  
+  # Store the daily animals dataframes in the output list
+  output$animals_daily <- animals_daily
   
   return(output)
 }
