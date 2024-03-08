@@ -109,3 +109,10 @@ plot_qoi(
   ylab     = "ingestion concentration (log10 CFU)"
 )
 
+#### Creates a dataframe with all the animals per each iteration
+all_animals <- do.call(rbind, lapply(seq_along(parallel_output), function(iteration) {
+  lapply(parallel_output[[iteration]], function(day_df) {
+    day_df$iteration <- iteration
+    return(day_df)
+  })
+})) %>% dplyr::bind_rows()
