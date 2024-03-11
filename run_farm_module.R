@@ -45,3 +45,30 @@ batch_simulator <- function(farm_module = new.farm_module()) {
   
   return(output)
 }
+
+## Function to simulate one production batch
+## generates the full animals dataframe at each iteration
+
+batch_simulator_full <- function(farm_module = new.farm_module()) {
+  
+  # initialization
+  animals <- farm_module$initialize_df() 
+  day_idx <- farm_module$params$day.min
+  animals_full <- list()
+  
+  while (day_idx < farm_module$params$day.max) {
+    
+    # run farm module for day_idx and update animals dataframe
+    animals <- farm_module$run(animals, day_idx)
+    
+    # store the daily iteration
+    animals$day <- rep(day_idx, nrow(animals))
+    
+    animals_full[[day_idx]] <- animals
+    
+    # update day index
+    day_idx <- day_idx + 1
+  } 
+  
+  return(list(animals_full))
+}

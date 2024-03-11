@@ -6,7 +6,23 @@ source(here::here("run_farm_module_parallel.R"))
 inputs <- load_inputs()
 n_sim  <- inputs$n_sim
 
+parallel_output_full <- batch_simulator_parallel(n_sim = n_sim, full = TRUE)
+
+# TODO: not clean
+# output post-processing full = TRUE
+all_animals <-
+  do.call(rbind, lapply(seq_along(parallel_output_full), function(iteration) {
+    lapply(parallel_output_full[[iteration]], function(day_df) {
+      day_df$iteration <- iteration
+      return(day_df)
+    })
+  })) %>% dplyr::bind_rows()
+
+
+## Only selected results
 parallel_output <- batch_simulator_parallel(n_sim = n_sim)
+
+# output post-processing full = FALSE
 output_avg      <- apply(parallel_output, c(1, 2), mean)
 output_std      <- apply(parallel_output, c(1, 2), sd)
 err             <- qt(p = 0.975, df = (n_sim - 1)) * output_std / sqrt(n_sim)
