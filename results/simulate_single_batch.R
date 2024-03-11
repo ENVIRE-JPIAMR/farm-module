@@ -4,6 +4,10 @@ source(here::here("visualization.R"))
 source(here::here("run_farm_module.R"))
 
 batch_output <- batch_simulator()
+batch_output_full <- batch_simulator_full()
+
+# bind the full dataframe
+batch_output_full_df <- bind_rows(batch_output_full)
 
 ## Plot for within flock prevalence
 plot_qoi(

@@ -24,6 +24,7 @@ batch_simulator <- function(farm_module = new.farm_module()) {
   animals <- farm_module$initialize_df() 
   day_idx <- farm_module$params$day.min
   output  <- list()
+  #TODO: store first day value in output
   
   while (day_idx < farm_module$params$day.max) {
     
@@ -50,25 +51,27 @@ batch_simulator <- function(farm_module = new.farm_module()) {
 ## generates the full animals dataframe at each iteration
 
 batch_simulator_full <- function(farm_module = new.farm_module()) {
-  
   # initialization
-  animals <- farm_module$initialize_df() 
+  animals <- farm_module$initialize_df()
   day_idx <- farm_module$params$day.min
   animals_full <- list()
   
+  # store the first day_idx values
+  animals$day <- rep(day_idx, nrow(animals))
+  animals_full[[day_idx]] <- animals
+  
   while (day_idx < farm_module$params$day.max) {
-    
-    # run farm module for day_idx and update animals dataframe
+    # run farm module & update animals dataframe of day_idx
     animals <- farm_module$run(animals, day_idx)
-    
-    # store the daily iteration
-    animals$day <- rep(day_idx, nrow(animals))
-    
-    animals_full[[day_idx]] <- animals
     
     # update day index
     day_idx <- day_idx + 1
-  } 
+    
+    # store the daily iteration
+    animals$day <- rep(day_idx, nrow(animals))
+    animals_full[[day_idx]] <- animals
+    
+  }
   
   return(list(animals_full))
 }
