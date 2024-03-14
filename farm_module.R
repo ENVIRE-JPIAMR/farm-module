@@ -151,7 +151,7 @@ new.farm_module <- function(input_list = load_inputs()){
       C_sum_esbl_env     = C_sum_esbl_env + C_esbl_excreted,
       C_esbl_gut         = C_esbl_gut - C_esbl_excreted,
       sum_feces_env      = sum_feces_gut,
-      sum_feces_cont_env = ifelse(infection_duration != -1, sum_feces_env, 0)
+      sum_feces_cont_env = ifelse(infection_duration != -1, sum_feces_cont_env + feces_gut, sum_feces_cont_env)
     )
   }
   
