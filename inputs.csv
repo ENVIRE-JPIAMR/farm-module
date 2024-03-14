@@ -10,6 +10,7 @@ r.max;Estimated;DOUBLE;Maximum growth rate for ESBL-producing E. coli in the bro
 K;Estimated;DOUBLE;Maximum amount of bacteria in the substrate (the intestinal content in this case);Robé et al. (2019);CFU/g;1000000
 ed_rate;Estimated;DOUBLE;Environmental decay rate of ESBL E. coli w.r.t the total amount of ESBL E. coli in the environment;Thomas et al. (2019);%;0.5
 ingestion_rate;Estimated;DOUBLE;Proportion of ingested contaminated feces along with feed;Becker et al. (2022);%;0.014
+n_legs;Estimated;DOUBLE;Number of legs per catcher;constant;unit;2
 beta.mean;Estimated;DOUBLE;Concentration of ESBL E. coli in the environment;Dame-koreval et al. (2020);CFU/day;0.31
 water_consum.min;Estimated;OBJECT;Minimum water consumption;Avian advice, University of Arkansas. (2009) ;g;c(14.384558, 21.1604419, 35.5449999, 40.503887, 45.046379, 50.4973694, 54.7370286, 47.5068955, 73.3990999, 73.3612458, 87.1022841, 98.5720764, 107.4677899, 113.2594672, 112.4645311, 116.0606706, 123.0636791, 131.5429975, 140.8929602, 146.495367, 134.6470337, 147.8959687, 143.6941636, 163.7568366, 160.0849889, 175.3780453, 185.6743605, 201.8759153, 200.3996054, 181.0561603, 212.5507715, 225.4211655, 209.4467353, 223.7934392, 212.5507715,210.3552337)
 water_consum.max;Estimated;OBJECT;Maximum water consumption;Avian advice, University of Arkansas. (2009) ;g;c(29.8668849, 42.6615707, 53.6392597, 62.6485355, 64.1626995, 73.2476835, 81.9541265, 87.7079497, 110.3447015, 113.8651328, 118.861874, 137.5239453, 143.6184554, 153.8390624, 153.8390624, 174.6588174, 185.7500687, 196.0085298, 206.6455319, 212.2479387, 207.0997811, 224.9669163, 238.0644349, 248.2471878, 245.1431516, 262.7453081, 271.5274593, 287.0097862, 290.8330503, 300.0315966, 298.1388916, 319.7535827, 333.5703292, 323.6147009, 330.7691258, 331.1855209)
@@ -24,3 +25,9 @@ target_weight;Selected;DOUBLE;Weight of the broilers at the end of the fattening
 prevalence;Selected;DOUBLE;Initial prevalence of infected broilers;Expert opinion, Robé;proportion;0.01
 litter_mass;Selected;DOUBLE;Litter quantity per square meter;Becker et al. (2022);g/m2;1000
 Dt;Selected;DOUBLE;Time step for QMRA simulation model;User defined;day;1
+thinning_day;Selected;DOUBLE;Day index when thinning is performed;User defined;day;28
+sole_size;Selected;DOUBLE;Size of one pair of of catcher boot sole;User defined;cm2;212.8
+n_catchers;Selected;DOUBLE;Number of catchers entering the barn;User defined;unit;10
+sole_retain_rate;Selected;DOUBLE;Proportion of feces getting stuck in the boot sole;User defined;proportion;0.1
+sole_discharge_rate;Selected;DOUBLE;Proportion of feces leaves the sole surface in the new barn;User defined;proportion;0.1
+thinning_percentage;Selected;DOUBLE;Proportion of animals removed;User defined;proportion;0.25
