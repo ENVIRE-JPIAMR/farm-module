@@ -5,7 +5,7 @@ source(here::here("farm_module.R"))
 ## Function to simulate production batches in parallel
 ## generates a 3D array: days-1 x 7 outputs x n_sim 
 
-batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, full = FALSE) {
+batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, full = FALSE, thinning = FALSE) {
   
   # custom bind function
   mybind <- function(matrix1, matrix2) {
@@ -48,7 +48,11 @@ batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, ful
         .inorder = FALSE
       ) %dopar% {
         source(here::here("run_farm_module.R"))
-        batch_output <- batch_simulator_full(farm_module)
+        if (thinning == TRUE){
+          batch_output <- batch_simulator_thinning(farm_module)
+        } else {
+          batch_output <- batch_simulator_full(farm_module)
+        }
         
         return(batch_output)
       }

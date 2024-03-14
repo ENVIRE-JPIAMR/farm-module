@@ -7,17 +7,26 @@ inputs <- load_inputs()
 n_sim  <- inputs$n_sim
 
 parallel_output_full <- batch_simulator_parallel(n_sim = n_sim, full = TRUE)
+parallel_output_thinning <- batch_simulator_parallel(n_sim = n_sim, full = TRUE, thinning = TRUE)
 
 # TODO: not clean
 # output post-processing full = TRUE
 all_animals <-
-  do.call(rbind, lapply(seq_along(parallel_output_full), function(iteration) {
-    lapply(parallel_output_full[[iteration]], function(day_df) {
+  do.call(rbind, lapply(seq_along(parallel_output_thinning), function(iteration) {
+    lapply(parallel_output_thinning[[iteration]], function(day_df) {
       day_df$iteration <- iteration
       return(day_df)
     })
   })) %>% dplyr::bind_rows()
 
+# TODO: not clean
+# summarize (thinning) parallel results
+result <- all_animals |> 
+  group_by(day, iteration) |>
+  summarise(C_sum_esbl_env = sum(C_sum_esbl_env, na.rm = TRUE),
+            sum_feces_env= sum(sum_feces_env),
+            C_esbl_gut= sum(C_esbl_gut)
+  )
 
 ## Only selected results
 parallel_output <- batch_simulator_parallel(n_sim = n_sim)
