@@ -3,11 +3,14 @@
 source(here::here("visualization.R"))
 source(here::here("run_farm_module.R"))
 
+# different functions to simulate a single batch
 batch_output <- batch_simulator()
 batch_output_full <- batch_simulator_full()
+batch_output_thinning <- batch_simulator_thinning()
 
-# bind the full dataframe
+# bind the full output dataframes
 batch_output_full_df <- bind_rows(batch_output_full)
+batch_output_thinning_df <- bind_rows(batch_output_thinning)
 
 ## Plot for within flock prevalence
 plot_qoi(
