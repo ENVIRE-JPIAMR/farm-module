@@ -1,6 +1,6 @@
 ## Function for loading input variables from csv list
 
-load_inputs <- function() {
+load_inputs <- function(input_manual = NA) {
   
   ## read input variables
   input_file <- here("inputs.csv")
@@ -30,6 +30,11 @@ load_inputs <- function() {
   
   input_list <- c(input_objects, input_doubles) 
   
+  # update the input list with manual inputs
+  if (is.list(input_manual)){
+    modifyList(input_list, input_manual)
+  }
+
   return(input_list)
 }
 
