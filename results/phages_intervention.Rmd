@@ -13,12 +13,20 @@ is being stored.
 
 ```{r setup, include=FALSE}
 source(here::here("visualization.R"))
+source(here::here("utilities/data_interpolation.R"))
 source(here::here("run_farm_module_parallel.R"))
 
 inputs <- load_inputs()
 n_sim  <- inputs$n_sim
-input_manual <- list(farm_size = 7.7)
 
+# updating the input params
+input_manual <- list(farm_size = 7.7,
+                     day.max = 42)
+
+input_interpolated <- interpolate_values()
+input_manual <- c(input_manual, input_interpolated)
+
+# simulating parallerl batches
 parallel_output <-
   batch_simulator_parallel(farm_module = new.farm_module(input_list = load_inputs(input_manual)),
                            n_sim = n_sim)
@@ -28,7 +36,7 @@ output_avg      <- apply(parallel_output, c(1, 2), mean)
 C_esbl_feces <- c(4.11e6, 3.07e5, 5.51e6, 3.83e6, 1.39e6)
 C_esbl_feces_phages <- c(5.37e5, 1.47e5, 1.67e6, 6.47e5, 5.64e4)
 
-day_idx <- c(1, 7, 14, 21, 27)
+day_idx <- c(1, 7, 14, 21, 27) + 14
 
 ## Plot for average (over broilers + iterations) excreted bacteria 
 
@@ -41,10 +49,10 @@ gg <- ggplot(data = data.frame(
 )) +
   geom_point(aes(x = days, y = qoi1, color = "Simulated"), size = 3) +  
   geom_line(aes(x = days, y = qoi1, color = "Simulated")) +   
-  geom_point(aes(x = days, y = qoi2, color = "Treated"), size = 3) + 
-  geom_line(aes(x = days, y = qoi2, color = "Treated")) + 
-  geom_point(aes(x = days, y = qoi3, color = "Untreated"), size = 3) + 
-  geom_line(aes(x = days, y = qoi3, color = "Untreated")) + 
+  geom_point(aes(x = days, y = qoi2, color = "Untreated"), size = 3) + 
+  geom_line(aes(x = days, y = qoi2, color = "Untreated")) + 
+  geom_point(aes(x = days, y = qoi3, color = "Treated"), size = 3) + 
+  geom_line(aes(x = days, y = qoi3, color = "Treated")) + 
   labs(
     title = "Average Bacterial concentration in excreted feces",
     subtitle = paste(dim(parallel_output)[3], "simulations"),
