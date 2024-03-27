@@ -92,7 +92,7 @@ plot_qoi(
   title    = "Concentration in bacteria in manure (litter + feces)",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
-  ylab     = "pen concentration (log10 CFU/m2)"
+  ylab     = "pen concentration (log10 CFU/g)"
 )
 
 ## Plot for average number of bacteria in the broiler's gut
