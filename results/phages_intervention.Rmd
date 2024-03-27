@@ -45,15 +45,7 @@ C_ctx_litter_phages <- c(1.90e3, 1.13e3, 5.20e1, 7.10e2, 2.30e1)
 
 day_idx <- c(1, 7, 14, 21, 27) + 14
 
-## Plot for average (over broilers + iterations) excreted bacteria 
-
-qoi1 <- log10(output_avg[, 3])[day_idx] # fecal samples
-qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx] # litter
-qoi2 <- log10(C_ctx_feces)
-qoi3 <- log10(C_ctx_feces_phages)
-
 ## function for plotting
-
 plot_qoi <- function(qoi1, qoi2, qoi3, title){
 
   gg <- ggplot(data = data.frame(
