@@ -3,9 +3,12 @@ source(here::here("load_inputs.R"))
 source(here::here("farm_module.R"))
 
 ## Function to simulate production batches in parallel
-## generates a 3D array: days-1 x 7 outputs x n_sim 
+## arguments: full -> TRUE; to generate full animals dataframe
+##                    FALSE, to generates a 3D array: days-1 x 7 outputs x n_sim 
+##            thinning -> TRUE; to perform thinning
+##            prevalence -> TRUE; to set prevalence to 0
 
-batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, full = FALSE, thinning = FALSE) {
+batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, full = FALSE, thinning = FALSE, prevalence = TRUE) {
   
   # custom bind function
   mybind <- function(matrix1, matrix2) {
@@ -34,8 +37,11 @@ batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, ful
               .combine = mybind,
               .options.snow = opts) %dopar% {
                 source(here::here("run_farm_module.R"))
-                batch_output <- do.call(cbind, batch_simulator(farm_module))
-                
+                if (thinning == TRUE){
+                  batch_output <- do.call(cbind, batch_simulator_thinning(farm_module, full = full, prevalence = prevalence))
+                } else {
+                  batch_output <- do.call(cbind, batch_simulator(farm_module))
+                }
                 return(batch_output)
               }
   } else {
@@ -49,7 +55,7 @@ batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, ful
       ) %dopar% {
         source(here::here("run_farm_module.R"))
         if (thinning == TRUE){
-          batch_output <- batch_simulator_thinning(farm_module)
+          batch_output <- batch_simulator_thinning(farm_module, full = full, prevalence = prevalence)
         } else {
           batch_output <- batch_simulator_full(farm_module)
         }

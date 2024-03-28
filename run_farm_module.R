@@ -18,7 +18,7 @@ source(here::here("farm_module.R"))
 ## 7) avg_esbl_ingested    (CFU)   := Average (over broilers) ESBL E. coli ingested
 ##                                      by a broiler
 
-batch_simulator <- function(farm_module = new.farm_module()) {
+batch_simulator <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA) {
   
   # initialization
   animals <- farm_module$initialize_df() 
@@ -35,6 +35,24 @@ batch_simulator <- function(farm_module = new.farm_module()) {
     
     # run farm module for day_idx and update animals dataframe
     animals <- farm_module$run(animals, day_idx)
+    
+    # thinning
+    if (is.na(total_feces_input) == FALSE && day_idx == farm_module$params$thinning_day - 1) {
+      
+      # Select a random row
+      random_rows <- sample(nrow(animals), round(farm_module$params$thinning_percentage*nrow(animals)))
+      
+      # target animals are removed
+      total_feces_target <- sum(animals$sum_feces_env[random_rows])
+      animals <- animals[-random_rows, ]
+      
+      # adding target animal feces (non-contaminated) to first broiler row
+      animals$sum_feces_env[1] <- animals$sum_feces_env[1] + total_feces_target
+      
+      # adding contaminated feces & CFU to first broiler row
+      animals$sum_feces_cont_env[1] <- total_feces_input
+      animals$C_sum_esbl_env[1] <- total_C_esbl_input
+    }
     
     # store daily outputs
     output$load              <- c(output$load, sum(animals$C_sum_esbl_env))
@@ -102,7 +120,7 @@ batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_in
 ## Function to simulate one production batch with thinning
 ## generates the full animals dataframe at each iteration
 
-batch_simulator_thinning <- function(farm_module = new.farm_module()) {
+batch_simulator_thinning <- function(farm_module = new.farm_module(), full = FALSE, prevalence = TRUE) {
   
   # run baseline scenario
   baseline_output <- batch_simulator() 
@@ -135,10 +153,16 @@ batch_simulator_thinning <- function(farm_module = new.farm_module()) {
   total_C_esbl_input <- total_feces_input * C_esbl_per_g_baseline 
   
   # change initial prevalence before actual scenario
-  farm_module$params$prevalence <- 0
+  if(prevalence == TRUE){
+    farm_module$params$prevalence <- 0  
+  }
   
   # full animal df output with thinning
-  output <- batch_simulator_full(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input)
+  if(full == FALSE){
+    output <- batch_simulator(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input)
+  }else{
+    output <- batch_simulator_full(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input)
+  }
   
   return(output)
   
