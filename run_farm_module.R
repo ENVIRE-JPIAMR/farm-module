@@ -23,9 +23,14 @@ batch_simulator <- function(farm_module = new.farm_module()) {
   # initialization
   animals <- farm_module$initialize_df() 
   day_idx <- farm_module$params$day.min
-  output  <- list()
-  #TODO: store first day value in output
-  
+  output  <- list(load = sum(animals$C_sum_esbl_env),
+                  prevalence = sum(animals$B_infection_status)/nrow(animals),
+                  avg_esbl_feces = 0,
+                  total_feces = sum(animals$sum_feces_gut),
+                  avg_esbl_gut = mean(animals$C_esbl_gut),
+                  avg_esbl_env = mean(animals$C_esbl_excreted),
+                  avg_esbl_ingested = 0)
+
   while (day_idx < farm_module$params$day.max) {
     
     # run farm module for day_idx and update animals dataframe
@@ -103,9 +108,8 @@ batch_simulator_thinning <- function(farm_module = new.farm_module()) {
   baseline_output <- batch_simulator() 
   
   # baseline variables
-  #TODO: one day lap (remove -1) (cf. previous TODO)
-  farm_module$params$C_sum_esbl_baseline  <- baseline_output$load[farm_module$params$thinning_day - 1] 
-  farm_module$params$total_feces_baseline <- baseline_output$total_feces[farm_module$params$thinning_day - 1] 
+  farm_module$params$C_sum_esbl_baseline  <- baseline_output$load[farm_module$params$thinning_day] 
+  farm_module$params$total_feces_baseline <- baseline_output$total_feces[farm_module$params$thinning_day] 
   
   feces_per_m2_baseline <-
     (farm_module$params$total_feces_baseline + (farm_module$params$litter_mass * farm_module$params$farm_size)) /
