@@ -3,6 +3,11 @@ source(here::here("load_inputs.R"))
 source(here::here("farm_module.R"))
 
 ## Function to simulate one production batch
+## Arguments: farm_module        := farm module environment
+##            total_feces_input  := Total incoming contaminated feces in thinning step; 
+##                                  default NA
+##            total_C_esbl_input := Total incoming CFUs of ESBL E.coli in thinning step;
+##                                  default NA
 ## generates 7 outputs for all days (QoIs from Becker et al. (2022))
 ## 1) load                 (CFU)   := Total ESBL E. coli in the environment till
 ##                                      this day
@@ -70,7 +75,7 @@ batch_simulator <- function(farm_module = new.farm_module(), total_feces_input =
   return(output)
 }
 
-## Function to simulate one production batch
+## Function to simulate one production batch (same arguments as before)
 ## generates the full animals dataframe at each iteration
 
 batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA) {
@@ -118,7 +123,9 @@ batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_in
 }
 
 ## Function to simulate one production batch with thinning
-## generates the full animals dataframe at each iteration
+## Arguments: full       := TRUE; to generate full dataframe output
+##            prevalence := TRUE; to set initial prevalence to 0       
+## Outputs: same format as either one of the above two functions
 
 batch_simulator_thinning <- function(farm_module = new.farm_module(), full = FALSE, prevalence = TRUE) {
   
