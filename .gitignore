@@ -2,4 +2,6 @@
 *~
 sandbox
 *.RData
-
+*.tex
+*.pdf
+*.html
