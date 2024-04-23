@@ -1,0 +1,134 @@
+---
+title: "Horizontal gene transfer in brolier's gut"
+output:
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+bibliography: reference.bib
+---
+
+The idea is mainly motivated by the existing studies in the literature, with the aim to
+model the transfer of the predominant ESBL gene bla_CTX-M-1 located on lncl1 plasmids.
+
+## Résumé of existing studies:
+
+### Study 1:
+
+@fischer14 did a *in vitro* study to determine the fitness cost of the plasmid
+for the bacterium. 
+They estimated the intrinsic growth rate $\psi$, maximum density $K$, lag 
+phase $\lambda$ and conjugation coefficient $\gamma$ considering three 
+different types of populations, namely donor (D), recipent (R) and 
+transconjugants (T). 
+
+The conjugation coefficient $\gamma$ is defined as the number of conjugation 
+events per bacteria per hour. $\gamma_D$ and $\gamma_T$ respectively denote 
+the conjugation coefficients (per bacteria per hour) for donor-recipient and 
+recipient-transconjugant.
+
+### Results:
+
+- Plasmid carriage did not impose a demonstrable fitness cost on its bacterial host in vitro.
+- No differences in growth parameters observed between D, T and R.
+- No plasmid loss was observed.
+- Estimated: $\gamma_T = 4.4e{-10}$ and $\gamma_D = 2.4e{-14}$ (repression-depression system).
+
+### Study 2:
+@fischer19 did a *in vivo* study with broiler chickens to examine whether 
+plasmid carriage would increase by conjugation or whether plasmid-carrying 
+*E. coli* variants would be outcompeted by plasmid-free *E. coli* variants,
+i.e., representing competitive exclusion.
+
+### Results:
+
+- Competitive exclusion of plasmid-carrying variants was counteracted by conjugation.
+- HGT is relevant in broliers' gut and needs to be implemented.
+
+## Incorporation in farm module:
+
+To incorporate the HGT among different population classes, I propose using the 
+following plasmid-dynamics model based on ODEs as used by @fischer14 but 
+modified according to our model assumptions. 
+
+$$
+\frac{dD}{dt} = \psi D \left(1-\frac{D}{K}\right) 
+$$
+$$
+\frac{dR}{dt} = \psi R \left(1-\frac{R}{K}\right) - \gamma_D D R - \gamma_T T R $$
+$$
+\frac{dT}{dt} = \psi T \left(1-\frac{T}{K}\right) + \gamma_D D R + \gamma_T T R
+$$
+
+with initial population sizes $D_0$, $R_0$ and $T_0$.
+
+### Assumptions:
+
+- A bacteria cell remains a donor even after donating a plasmid (@fischer14).
+- There is no plasmid loss observed (@fischer14).
+- Same growth parameters $\psi$ and $K$ are considered for three subpopulations (@fischer14).
+- No lag phase $\lambda$ is considered in our model. The intuition of using the lag phase, as explained by @baranyi95 is to model the early growth inhibition which occurs when the bacteria are transferred in a new environment (inoculated for e.g.). For for us there is no inoculation hence no change of environment.
+- Two different conjugation coefficients are used: $\gamma_D$ for D-R and $\gamma_T$ for T-R. 
+- This formulation assumes conjugation coefficients are jointly proportional
+to the densities of donor and recipient cells. That is why they are multiplied 
+by the to the total number of bacteria pairs possible for conjugation. Similar 
+formulations of dynamics model are available in the literature (see, e.g. @volkova13)
+
+## MWE:
+
+```{r setup}
+# Import necessary libraries
+library(deSolve)
+library(ggplot2)
+
+# Define the ODE system
+ode_system <- function(time, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dD <- psi * D * (1 - D/K)
+    dR <- psi * R * (1 - R/K) - gamma_T * R * T - gamma_D * D * R
+    dT <- psi * T * (1 - T/K) + gamma_T * R * T + gamma_D * D * R
+    return(list(c(dD, dR, dT)))
+  })
+}
+
+# Initial conditions
+initial_state <- c(D = 0.5e8, R = 0.5e8, T = 0)
+
+# Parameters
+parameters <- c(gamma_T = 4.4e-10, gamma_D = 2.4e-14, psi = 1.86, K = 9.33e8)
+parameters_0 <- c(gamma_T = 4.4e-10, gamma_D = 2.4e-14, psi = 0, K = 9.33e8)
+
+# Time vector
+times <- seq(0, 24, by = 1)
+
+# Solve the ODE system
+solution <- ode(y = initial_state, times = times, func = ode_system, parms = parameters)
+
+# Plot the results
+df <- as.data.frame(solution)
+df$time <- as.numeric(df$time)
+
+# Reshape the dataframe from wide to long format
+df_long <- reshape2::melt(df, id.vars = "time")
+
+# Plot dynamics
+ggplot(df_long, aes(x = time, y = value, color = variable)) +
+  geom_line() +
+  labs(x = "Time", y = "Value", title = "Bacteria evolution during 24h") +
+  scale_color_manual(values = c("D" = "blue", "T" = "red", "R" = "green")) +
+  theme_minimal() +
+  theme(legend.position = "top") +
+  labs(color = "Variable")
+
+```
+The Blue line shows the evolution of the $D$ class which is equivalent to 
+the ESBL *E. coli* population in our model (without HGT). In presence of HGT 
+we will have an additional population of ESBL *E. coli* corresponding the $T$
+class as denoted by the Red line.
+
+## Parameter selection:
+
+- The parameters in the MWE are taken from the *in vitro* study by @fischer14. 
+- The conjugation coefficients depend on the initial inoculation/concentration
+as shown in the *in vivo* experiments by @fischer19 (Table 3). Any idea about 
+what should we use?
+
