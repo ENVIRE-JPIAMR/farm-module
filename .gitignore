@@ -5,4 +5,5 @@ sandbox
 *.tex
 *.pdf
 *.html
+*.log
 ~$*
