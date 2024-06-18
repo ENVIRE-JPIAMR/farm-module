@@ -1,6 +1,8 @@
 ---
-title: "Data analysis: Intervention Phages"
-output: html_notebook
+title: 'Data analysis: Intervention Phages'
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 ## Experiment by ENVIRE partner: Poland
@@ -80,24 +82,69 @@ plot_qoi <- function(qoi1, qoi2, qoi3, title){
 qoi1 <- log10(output_avg[, 3])[day_idx] 
 qoi2 <- log10(C_ecoli_feces)
 qoi3 <- log10(C_ecoli_feces_phages)
-plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (in feces)")
+plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (feces)")
 
 ## Simulated ESBL E.coli vs experimental CTX (in feces)
 qoi1 <- log10(output_avg[, 3])[day_idx] 
 qoi2 <- log10(C_ctx_feces)
 qoi3 <- log10(C_ctx_feces_phages)
-plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (in feces)")
+plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (feces)")
 
 ## Simulated ESBL E.coli vs experimental E.coli (in litter)
 qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx]
 qoi2 <- log10(C_ecoli_litter)
 qoi3 <- log10(C_ecoli_litter_phages)
-plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (in litter)")
+plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (litter)")
 
 ## Simulated ESBL E.coli vs experimental CTX (in litter)
 qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx]
 qoi2 <- log10(C_ctx_litter)
 qoi3 <- log10(C_ctx_litter_phages)
-plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (in litter)")
+plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (litter)")
 
 ```
+```{r}
+## reductions in experimental CTX concentrations
+reduction_litter_percentage <- (C_ctx_litter - C_ctx_litter_phages)/C_ctx_litter
+reduction_feces_percentage <- (C_ctx_feces - C_ctx_feces_phages)/C_ctx_feces
+
+## fitting a smooth sigmoid to interpolate the reduction
+day_index <- day_idx
+proportion_reduction <- reduction_litter_percentage
+
+# Define the logistic function
+logistic_function <- function(x, L, k, x0) {
+  L / (1 + exp(-k * (x - x0)))
+}
+
+# Initial parameter estimates
+start_params <- c(L = 1, k = 0.1, x0 = 30)
+
+# Fit the logistic model using nls (non-linear least squares)
+fit <- nls(proportion_reduction ~ logistic_function(day_index, L, k, x0),
+           start = start_params)
+
+# Display the summary of the model
+summary(fit)
+
+# Predict the proportion reduction for day index from 0 to 42
+predict_days <- 0:42
+predicted_reduction <- predict(fit, newdata = data.frame(day_index = predict_days))
+
+# Ensure predicted values are between 0 and 1
+predicted_reduction <- pmin(pmax(predicted_reduction, 0), 1)
+
+# Plot the results
+plot(day_index, proportion_reduction, main = "Bacteria Proportion Reduction in Litter",
+     xlab = "Day Index", ylab = "Proportion Reduction", pch = 19, col = "blue")
+curve(logistic_function(x, coef(fit)[1], coef(fit)[2], coef(fit)[3]), from = 0, to = 42, col = "red", add = TRUE, lwd = 2)
+legend("bottomright", legend = c("Observed", "Predicted"), col = c("blue", "red"), pch = c(19, NA), lwd = c(NA, 2))
+
+# Print the predicted values
+predicted_reduction
+
+```
+
+
+
+
