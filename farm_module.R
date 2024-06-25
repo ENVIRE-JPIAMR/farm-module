@@ -62,7 +62,7 @@ new.farm_module <- function(input_list = load_inputs()){
              sum(animals$C_sum_esbl_env) / sum(animals$sum_feces_cont_env),
              0)
     
-    # compute force of infection
+    # compute force of infection  - Here the mistake <---------------------------
     foi <- ifelse(esbl_conc_feces == 0,
                   0,
                   log10(esbl_conc_feces))
