@@ -65,7 +65,7 @@ new.farm_module <- function(input_list = load_inputs()){
     # compute force of infection  - Here the mistake <---------------------------
     foi <- ifelse(esbl_conc_feces == 0,
                   0,
-                  log10(esbl_conc_feces))
+                  log10(esbl_conc_feces) * fm$params$beta.mean)  ### correction here
     
     # compute newly infected broilers
     N_susceptible <- sum(animals$infection_duration == -1)
