@@ -8,6 +8,8 @@ source(here::here("farm_module.R"))
 ##                                  default NA
 ##            total_C_esbl_input := Total incoming CFUs of ESBL E.coli in thinning step;
 ##                                  default NA
+##            phages             := To apply phages spray in litter (Poland protocol)
+##                                  default FALSE 
 ## generates 7 outputs for all days (QoIs from Becker et al. (2022))
 ## 1) load                 (CFU)   := Total ESBL E. coli in the environment till
 ##                                      this day
@@ -23,7 +25,7 @@ source(here::here("farm_module.R"))
 ## 7) avg_esbl_ingested    (CFU)   := Average (over broilers) ESBL E. coli ingested
 ##                                      by a broiler
 
-batch_simulator <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA) {
+batch_simulator <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA, phages = FALSE) {
   
   # initialization
   animals <- farm_module$initialize_df() 
@@ -39,7 +41,7 @@ batch_simulator <- function(farm_module = new.farm_module(), total_feces_input =
   while (day_idx < farm_module$params$day.max) {
     
     # run farm module for day_idx and update animals dataframe
-    animals <- farm_module$run(animals, day_idx)
+    animals <- farm_module$run(animals, day_idx, phages = phages)
     
     # thinning
     if (is.na(total_feces_input) == FALSE && day_idx == farm_module$params$thinning_day - 1) {
@@ -78,7 +80,7 @@ batch_simulator <- function(farm_module = new.farm_module(), total_feces_input =
 ## Function to simulate one production batch (same arguments as before)
 ## generates the full animals dataframe at each iteration
 
-batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA) {
+batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_input = NA, total_C_esbl_input = NA, phages = FALSE) {
   # initialization
   animals <- farm_module$initialize_df()
   day_idx <- farm_module$params$day.min
@@ -90,7 +92,7 @@ batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_in
   
   while (day_idx < farm_module$params$day.max) {
     # run farm module & update animals dataframe of day_idx
-    animals <- farm_module$run(animals, day_idx)
+    animals <- farm_module$run(animals, day_idx, phages = phages)
     
     # thinning
     if (is.na(total_feces_input) == FALSE && day_idx == farm_module$params$thinning_day - 1) {
@@ -124,10 +126,12 @@ batch_simulator_full <- function(farm_module = new.farm_module(), total_feces_in
 
 ## Function to simulate one production batch with thinning
 ## Arguments: full       := TRUE; to generate full dataframe output
-##            prevalence := TRUE; to set initial prevalence to 0       
+##            prevalence := TRUE; to set initial prevalence to 0 (only applicable for thinning step)  
+##            phages     := To apply phages spray in litter (Poland protocol)
+##                          default FALSE 
 ## Outputs: same format as either one of the above two functions
 
-batch_simulator_thinning <- function(farm_module = new.farm_module(), full = FALSE, prevalence = TRUE) {
+batch_simulator_thinning <- function(farm_module = new.farm_module(), full = FALSE, prevalence = TRUE, phages = FALSE) {
   
   # run baseline scenario
   baseline_output <- batch_simulator() 
@@ -166,9 +170,9 @@ batch_simulator_thinning <- function(farm_module = new.farm_module(), full = FAL
   
   # full animal df output with thinning
   if(full == FALSE){
-    output <- batch_simulator(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input)
+    output <- batch_simulator(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input, phages = phages)
   }else{
-    output <- batch_simulator_full(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input)
+    output <- batch_simulator_full(farm_module = farm_module, total_feces_input = total_feces_input, total_C_esbl_input = total_C_esbl_input, phages = phages)
   }
   
   return(output)

@@ -166,8 +166,15 @@ new.farm_module <- function(input_list = load_inputs()){
       ))
   }
   
+  ## Phages intervention
+  fm$phages_intervention_litter <- function(day, animals) {
+    
+    animals %>%
+      mutate(C_sum_esbl_env = C_sum_esbl_env * (1 - fm$params$phages_reduction[day]))
+  }
+  
   ## Function to run farm module for a particular day
-  fm$run <- function(animals, day){
+  fm$run <- function(animals, day, phages = FALSE){
     
     animals <- fm$feces_production(day,animals)
     animals <- fm$feces_ingestion(day, animals)
@@ -181,6 +188,10 @@ new.farm_module <- function(input_list = load_inputs()){
       ifelse(animals$infection_duration != -1,
              animals$infection_duration + 1,
              -1)
+    
+    if(phages == TRUE){
+      animals <- fm$phages_intervention_litter(day, animals)
+    }
     
     return(animals)
   }

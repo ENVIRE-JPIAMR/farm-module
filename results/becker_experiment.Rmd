@@ -23,25 +23,142 @@ input_manual <- list(day.max = 21,
                      target_weight = 2,
                      prevalence = 0.5)
 
+## run simulator
 parallel_output <-
   batch_simulator_parallel(farm_module = new.farm_module(input_list = load_inputs(input_manual)),
                            n_sim = n_sim)
-output_avg      <- apply(parallel_output, c(1, 2), mean)
-output_std      <- apply(parallel_output, c(1, 2), sd)
-err             <- qt(p = 0.975, df = (n_sim - 1)) * output_std / sqrt(n_sim)
-ci.lower        <- output_avg - err
-ci.upper        <- output_avg + err
+parallel_output_phages <-
+  batch_simulator_parallel(farm_module = new.farm_module(input_list = load_inputs(input_manual)),
+                           n_sim = n_sim, phages = TRUE)
+
+## post process output for plotting
+get_data <- function(idxx, parallel_output) {
+    
+    output_avg <- apply(parallel_output, c(1, 2), mean)
+    
+    ## taking log10 on simulator outputs
+    columns_to_transform <- c(1, 3, 5, 6, 7)
+
+    # Apply log10 transformation to the specified columns
+    output_avg[, columns_to_transform] <- log10(output_avg[, columns_to_transform])
+
+    output_avg[is.infinite(output_avg)] <- 0
+
+    # compute CI based on sample quantiles
+    ci.upper_log  <- apply(parallel_output, c(1, 2), function(x) quantile(log10(x), probs = 0.975))
+    ci.lower_log  <- apply(parallel_output, c(1, 2), function(x) quantile(log10(x), probs = 0.025))
+    ci.upper      <- apply(parallel_output, c(1, 2), function(x) quantile(x, probs = 0.975))
+    ci.lower      <- apply(parallel_output, c(1, 2), function(x) quantile(x, probs = 0.025))
+    
+    if (is.element(idxx, columns_to_transform)) {
+      ci_lower <- ci.lower_log[, idxx]
+      ci_upper <- ci.upper_log[, idxx]
+    } else {
+      ci_lower <- ci.lower[, idxx]
+      ci_upper <- ci.upper[, idxx]
+    }
+    
+    data <- data.frame(
+      qoi      = output_avg[, idxx],
+      ci_lower = ci_lower,
+      ci_upper = ci_upper
+    )
+    return(data)
+}
 ```
 
 ## Plots
 
 ```{r}
+## Plot for load in farm environment
+data1 = get_data(1, parallel_output)
+data2 = get_data(1, parallel_output_phages)
+
+plot_qois(
+  data1     = data1, 
+  data2     = data2, 
+  title     = "Load in farm environment: phages intervention",
+  subtitle  = paste(dim(parallel_output)[3], "simulations"),
+  xlab      = "Days",
+  ylab      = "log10 CFU"
+)
+
 ## Plot for average Within flock prevalence
+data1 = get_data(2, parallel_output)
+data2 = get_data(2, parallel_output_phages)
+
+plot_qois(
+  data1     = data1, 
+  data2     = data2, 
+  title     = "Average flock prevalence: phages intervention",
+  subtitle  = paste(dim(parallel_output)[3], "simulations"),
+  xlab      = "Days",
+  ylab      = "Proportion of infected broilers"
+)
+
+## Plot for average (over broilers + iterations) excreted bacteria 
+data1 = get_data(3, parallel_output)
+data2 = get_data(3, parallel_output_phages)
+
+plot_qois(
+  data1    = data1, 
+  data2    = data2, 
+  title    = "Average Bacterial concentration in excreted feces",
+  subtitle = paste(dim(parallel_output)[3], "simulations"),
+  xlab     = "Days",
+  ylab     = "ESBL E. coli (log10 CFU/g)"
+)
+
+## Plot for average number of bacteria in the broiler's gut
+data1 = get_data(5, parallel_output)
+data2 = get_data(5, parallel_output_phages)  
+
+plot_qois(
+  data1    = data1, 
+  data2    = data2, 
+  title    = "Concentration in bacteria in broilers gut",
+  subtitle = paste(dim(parallel_output)[3], "simulations"),
+  xlab     = "Days",
+  ylab     = "gut concentration (log10 CFU)"
+)
+
+## Plot for average number of bacteria excreted
+data1 = get_data(6, parallel_output)
+data2 = get_data(6, parallel_output_phages)
+
+plot_qois(
+  data1    = data1, 
+  data2    = data2, 
+  title    = "Concentration in bacteria excreted",
+  subtitle = paste(dim(parallel_output)[3], "simulations"),
+  xlab     = "Days",
+  ylab     = "excretion concentration (log10 CFU)"
+)
+
+## Plot for average number of bacteria ingested
+data1 = get_data(7, parallel_output)
+data2 = get_data(7, parallel_output_phages)
+
+plot_qois(
+  data1    = data1, 
+  data2    = data2, 
+  title    = "Concentration in bacteria ingested",
+  subtitle = paste(dim(parallel_output)[3], "simulations"),
+  xlab     = "Days",
+  ylab     = "ingestion concentration (log10 CFU)"
+)
+
+
+```
+
+
+```{r}
+## Plot for average Within flock prevalence
+data <- get_data(2, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = output_avg[, 2],
-  ci_lower = ci.lower[, 2],
-  ci_upper = ci.upper[, 2],
+  qoi      = data$qoi,
+  ci_lower = data$ci_lower,
+  ci_upper = data$ci_upper,
   title    = "Average flock prevalence",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -49,11 +166,11 @@ plot_qoi(
 )
 
 ## Plot for average (over broilers + iterations) excreted bacteria 
+data <- get_data(3, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = log10(output_avg[, 3]),
-  ci_lower = log10(ci.lower[, 3]),
-  ci_upper = log10(ci.upper[, 3]),
+  qoi      = data$qoi,
+  ci_lower = data$ci_lower,
+  ci_upper = data$ci_upper,
   title    = "Average Bacterial concentration in excreted feces",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -61,11 +178,11 @@ plot_qoi(
 )
 
 ## Plot for amount of litter + feces  
+data <- get_data(4, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = (output_avg[, 4]+inputs$litter_mass)/1000,
-  ci_lower = NA,
-  ci_upper = NA,
+  qoi      = (data$qoi+inputs$litter_mass)/1000,
+  ci_lower = (data$ci_lower+inputs$litter_mass)/1000,
+  ci_upper = (data$ci_upper+inputs$litter_mass)/1000,
   title    = "Mass of litter + feces",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -73,11 +190,11 @@ plot_qoi(
 )
 
 ## Plot for number of bacteria per sq. meter  
+data <- get_data(1, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = output_avg[, 1]/inputs$farm_size,
-  ci_lower = NA,
-  ci_upper = NA,
+  qoi      = data$qoi/inputs$farm_size,
+  ci_lower = data$ci_lower/inputs$farm_size,
+  ci_upper = data$ci_upper/inputs$farm_size,
   title    = "Concentration in bacteria in farm",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -85,9 +202,10 @@ plot_qoi(
 )
 
 ## Plot for number of bacteria per g of pen mass  
+data1 <- get_data(1, parallel_output)
+data2 <- get_data(4, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass)),
+  qoi      = data1$qoi/(data2$qoi+inputs$litter_mass),
   ci_lower = NA,
   ci_upper = NA,
   title    = "Concentration in bacteria in manure (litter + feces)",
@@ -97,11 +215,11 @@ plot_qoi(
 )
 
 ## Plot for average number of bacteria in the broiler's gut
+data <- get_data(5, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = log10(output_avg[, 5]),
-  ci_lower = NA,
-  ci_upper = NA,
+  qoi      = data$qoi,
+  ci_lower = data$ci_lower,
+  ci_upper = data$ci_upper,
   title    = "Concentration in bacteria in broilers gut",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -109,11 +227,11 @@ plot_qoi(
 )
 
 ## Plot for average number of bacteria excreted
+data <- get_data(6, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = log10(output_avg[, 6]),
-  ci_lower = NA,
-  ci_upper = NA,
+  qoi      = data$qoi,
+  ci_lower = data$ci_lower,
+  ci_upper = data$ci_upper,
   title    = "Concentration in bacteria excreted",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",
@@ -121,11 +239,11 @@ plot_qoi(
 )
 
 ## Plot for average number of bacteria ingested
+data <- get_data(7, parallel_output)
 plot_qoi(
-  data     = output_avg,
-  qoi      = log10(output_avg[, 7]),
-  ci_lower = NA,
-  ci_upper = NA,
+  qoi      = data$qoi,
+  ci_lower = data$ci_lower,
+  ci_upper = data$ci_upper,
   title    = "Concentration in bacteria ingested",
   subtitle = paste(dim(parallel_output)[3], "simulations"),
   xlab     = "Days",

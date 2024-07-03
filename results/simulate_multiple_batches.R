@@ -10,11 +10,13 @@ n_sim  <- inputs$n_sim
 parallel_output <- batch_simulator_parallel(n_sim = n_sim)
 parallel_output_thinning <- batch_simulator_parallel(n_sim = n_sim, full = FALSE, thinning = TRUE, prevalence = TRUE)
 parallel_output_both <- batch_simulator_parallel(n_sim = n_sim, full = FALSE, thinning = TRUE, prevalence = FALSE)
+parallel_output_phages <- batch_simulator_parallel(n_sim = n_sim, phages = TRUE)
 
 ## post-process selected results
 output_avg <- apply(parallel_output, c(1, 2), mean)
 output_avg_thinning <- apply(parallel_output_thinning, c(1, 2), mean)
 output_avg_both <- apply(parallel_output_both, c(1, 2), mean)
+output_avg_phages <- apply(parallel_output_phages, c(1, 2), mean)
 
 ## Full results
 parallel_output_full <- batch_simulator_parallel(n_sim = n_sim, full = TRUE)

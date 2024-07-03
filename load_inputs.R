@@ -13,7 +13,9 @@ load_inputs <- function(input_manual = list()) {
     water_consum.mean   = eval(parse(text = df_read$Value[df_read$Variable == "water_consum.mean"])),
     weight              = eval(parse(text = df_read$Value[df_read$Variable == "weight"])),
     daily_gain          = eval(parse(text = df_read$Value[df_read$Variable == "daily_gain"])),
-    daily_intake        = eval(parse(text = df_read$Value[df_read$Variable == "daily_intake"]))
+    daily_intake        = eval(parse(text = df_read$Value[df_read$Variable == "daily_intake"])),
+    phages_reduction    = eval(parse(text = df_read$Value[df_read$Variable == "phages_reduction"]))
+    
   )
   
   ## parsing non-objects from input list
