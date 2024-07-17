@@ -4,6 +4,14 @@ This repository provides code and data to for the
 QMRA model for the farm module, intended to quantify
 ESBL producing E. coli in broiler manure.
 
+## Directory setup
+The parent directory needs to be initialized with `.here` file and `init.R` with
+
+`
+library(here)
+here::i_am('init.R')
+`
+
 ## Directory layout
 
 There is one subdirectory in this repository:

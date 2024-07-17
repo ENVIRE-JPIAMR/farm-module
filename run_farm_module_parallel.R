@@ -1,6 +1,6 @@
-source(here::here("load_libraries.R"))
-source(here::here("load_inputs.R"))
-source(here::here("farm_module.R"))
+source(here::here("farm-module/load_libraries.R"))
+source(here::here("farm-module/load_inputs.R"))
+source(here::here("farm-module/farm_module.R"))
 
 ## Function to simulate production batches in parallel
 ## arguments: full       -> TRUE; to generate full animals dataframe
@@ -36,8 +36,10 @@ batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, ful
     output <-
       foreach(i = 1:n_sim,
               .combine = mybind,
-              .options.snow = opts) %dopar% {
-                source(here::here("run_farm_module.R"))
+              .options.snow = opts, 
+              .packages = c("here")) %dopar% {
+                here::i_am("farm-module/run_farm_module_parallel.R")
+                source(here::here("farm-module/run_farm_module.R"))
                 if (thinning == TRUE){
                   batch_output <- do.call(cbind, batch_simulator_thinning(farm_module, full = full, prevalence = prevalence, phages = phages))
                 } else {
@@ -52,9 +54,11 @@ batch_simulator_parallel <- function(farm_module = new.farm_module(), n_sim, ful
         .combine = 'c',
         .options.snow = opts,
         .multicombine = TRUE,
-        .inorder = FALSE
+        .inorder = FALSE, 
+        .packages = c("here")
       ) %dopar% {
-        source(here::here("run_farm_module.R"))
+        here::i_am("farm-module/run_farm_module_parallel.R")
+        source(here::here("farm-module/run_farm_module.R"))
         if (thinning == TRUE){
           batch_output <- batch_simulator_thinning(farm_module, full = full, prevalence = prevalence, phages = phages)
         } else {

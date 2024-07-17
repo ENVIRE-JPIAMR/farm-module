@@ -3,7 +3,7 @@
 load_inputs <- function(input_manual = list()) {
   
   ## read input variables
-  input_file <- here("inputs.csv")
+  input_file <- here("farm-module/inputs.csv")
   df_read <- read.csv(input_file, header = TRUE, sep = ';')
   
   ## parsing objects from input list

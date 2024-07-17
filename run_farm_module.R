@@ -1,6 +1,6 @@
-source(here::here("load_libraries.R"))
-source(here::here("load_inputs.R"))
-source(here::here("farm_module.R"))
+source(here::here("farm-module/load_libraries.R"))
+source(here::here("farm-module/load_inputs.R"))
+source(here::here("farm-module/farm_module.R"))
 
 ## Function to simulate one production batch
 ## Arguments: farm_module        := farm module environment

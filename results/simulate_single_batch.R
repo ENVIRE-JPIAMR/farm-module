@@ -1,7 +1,7 @@
 ## Compute QoIs for a single batch
 
-source(here::here("visualization.R"))
-source(here::here("run_farm_module.R"))
+source(here::here("farm-module/visualization.R"))
+source(here::here("farm-module/run_farm_module.R"))
 
 # different functions to simulate a single batch
 batch_output <- batch_simulator()

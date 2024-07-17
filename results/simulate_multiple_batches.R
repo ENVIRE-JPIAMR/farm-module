@@ -1,7 +1,7 @@
 ## Compute QoIs for multiple batches
 
-source(here::here("visualization.R"))
-source(here::here("run_farm_module_parallel.R"))
+source(here::here("farm-module/visualization.R"))
+source(here::here("farm-module/run_farm_module_parallel.R"))
 
 inputs <- load_inputs()
 n_sim  <- inputs$n_sim
