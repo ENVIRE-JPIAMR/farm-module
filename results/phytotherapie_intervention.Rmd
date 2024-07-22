@@ -61,6 +61,13 @@ prevalence_g7 <- prevalence(g7)
 prevalence_g8 <- prevalence(g8)
 prevalence_g9 <- prevalence(g9)
 
+list_of_prevalences <- list(prevalence_g1, prevalence_g2, prevalence_g3, 
+                            prevalence_g4, prevalence_g5, prevalence_g6, 
+                            prevalence_g7, prevalence_g8, prevalence_g9)
+
+# final prevalences
+prev_final <- sapply(list_of_prevalences, function(x) tail(x, 1))
+
 # Create a data frame for plotting
 data <- data.frame(
   days = rep(days, 9),
@@ -69,7 +76,7 @@ data <- data.frame(
 )
 ```
 
-
+### Prevalance dynamics for different control groups
 ```{r, include=TRUE}
 # Plot the prevalence dynamics
 ggplot(data, aes(x = days, y = prevalence, color = group, group = group)) +
@@ -82,5 +89,33 @@ ggplot(data, aes(x = days, y = prevalence, color = group, group = group)) +
   theme_minimal() +
   theme(legend.title = element_blank())
 
+```
+### Plotting the final prevalences
+```{r, include=FALSE}
+short_groups <- c("NC", "Antibiotics", "PC", "5g/kg Thyme", "5g/kg Rosemary", 
+                  "0.3ml/L Thyme", "0.3ml/L Rosemary", "5g/kg + 0.3ml/L Thyme", 
+                  "5g/kg + 0.3ml/L Rosemary")
+
+data <- data.frame(Group = short_groups, Prevalence = prev_final)
+
+# sorting
+data <- data[order(-data$Prevalence), ]
+
+# Calculate the percentage reduction compared to the highest prevalence
+highest_prevalence <- max(data$Prevalence)
+data$Reduction <- 100 * (highest_prevalence - data$Prevalence) / highest_prevalence
+data$Label <- paste0(round(data$Reduction, 2), "%")
+```
+
+
+```{r, include=TRUE}
+ggplot(data, aes(x = reorder(Group, -Prevalence), y = Prevalence)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = Label), vjust = -0.5, color = "black") +
+  theme_minimal() +
+  labs(title = "Final Prevalences for Different Groups with Percentage Reduction",
+       x = "Group",
+       y = "Prevalence") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
