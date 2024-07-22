@@ -1,0 +1,105 @@
+---
+title: "Data analysis: intervention anaerobic digestion"
+output: html_notebook
+---
+
+## Experiment by ENVIRE partner: ATB Germany
+
+The experiment was related to the treatement of poultry manure based on the principle 
+of Anaerobic digestion with different carbon sources and temperatures.
+
+- Total and resistent *E. coli* (Cefotaximae and Ciprofloxacin) were quantified 
+starting form D-1 upto D-12
+- Temperature has a main influence (two temperature setup used: $30$°C and $37$°C)
+- Difference in C/N-ratio has no significant impact
+- Difference in reduction kinetics appear during the first 8 days of treatment, 
+after 8 days differences are not significant
+- Differences between total and resistant *E. coli* are not significant
+
+```{r, include=FALSE}
+ctx_30 <- c(1.16E+06, 3.11E+07, 1.46E+06, 1.04E+06, 1.79E+06, 6.77E+05, 2.85E+05, 1.66E+05, 8.85E+04)
+ctx_37 <- c(1.14E+06, 2.78E+07, 2.19E+06, 6.36E+05, 9.49E+05, 2.62E+04, 5.00E+02, 5.00E+02, 5.00E+02)
+
+cip_30 <- c(8.94E+05, 4.72E+07, 1.12E+07, 5.13E+06, 1.94E+07, 1.69E+07, 6.36E+05, 3.38E+05, 1.89E+05)
+cip_37 <- c(1.25E+06, 3.68E+07, 8.03E+06, 1.11E+06, 3.18E+06, 2.47E+05, 5.00E+02, 5.00E+02, 5.00E+02)
+
+# Define the number of days
+days <- 0:8  
+
+# Create a dataframe for plotting
+data_ctx <- data.frame(
+  Day = rep(days, 2),
+  Value = c(ctx_30, ctx_37),
+  Condition = rep(c("30°C", "37°C"), each = length(days))
+)
+
+data_cip <- data.frame(
+  Day = rep(days, 2),
+  Value = c(cip_30, cip_37),
+  Condition = rep(c("30°C", "37°C"), each = length(days))
+)
+```
+```{r, include=TRUE}
+ggplot(data_ctx, aes(x = Day, y = log10(Value), color = Condition, group = Condition)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_y_log10() +  # Use log10 scale for y-axis if needed
+  theme_minimal() +
+  labs(title = "CTX E. coli in poultry manure",
+       x = "Day",
+       y = "log10 CFU/g",
+       color = "Temperature") +
+  theme(legend.position = "right")
+```
+```{r, include=TRUE}
+ggplot(data_cip, aes(x = Day, y = log10(Value), color = Condition, group = Condition)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_y_log10() +  # Use log10 scale for y-axis if needed
+  theme_minimal() +
+  labs(title = "CIP E. coli in poultry manure",
+       x = "Day",
+       y = "log10 CFU/g",
+       color = "Temperature") +
+  theme(legend.position = "right")
+```
+- Despite of availability of several trial data, the uncertainties in the daily
+observations can not be quantified (for all days) due to lack of *E. coli* 
+detection (empty cells).
+
+```{r, include=FALSE}
+# Calculate the rate of reduction compared to the first day
+reduction_rate <- function(concentration) {
+  
+  #log transformation
+  concentration <- log10(concentration)
+  
+  initial <- concentration[1]
+  reduction <- (initial - concentration) / initial * 100
+  return(reduction)
+}
+
+ctx_30_reduction <- reduction_rate(ctx_30)
+ctx_37_reduction <- reduction_rate(ctx_37)
+
+# Create a dataframe for plotting
+data <- data.frame(
+  Day = rep(days, 2),
+  Reduction = c(ctx_30_reduction, ctx_37_reduction),
+  Condition = rep(c("ctx_30", "ctx_37"), each = length(days))
+)
+```
+```{r, include=TRUE}
+# Plot the data using ggplot2
+ggplot(data, aes(x = Day, y = Reduction, color = Condition, group = Condition)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(title = "Rate of log10 reduction in concentration over 8 days",
+       x = "Day",
+       y = "Reduction (%)",
+       color = "Condition") +
+  theme(legend.position = "right")
+```
+
+
