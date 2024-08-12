@@ -8,7 +8,7 @@ day.max;Estimated;DOUBLE;Total duration of the fattening period;Becker et al. (2
 r.min;Estimated;DOUBLE;Minimum growth rate for ESBL-producing E. coli in the broiler’s intestine;Becker et al. (2022);log10 CFU;0
 r.max;Estimated;DOUBLE;Maximum growth rate for ESBL-producing E. coli in the broiler’s intestine;Becker et al. (2022);log10 CFU;5
 K;Estimated;DOUBLE;Maximum amount of bacteria in the substrate (the intestinal content in this case);Robé et al. (2019);CFU/g;1000000
-ed_rate;Estimated;DOUBLE;Environmental decay rate of ESBL E. coli w.r.t the total amount of ESBL E. coli in the environment;Thomas et al. (2019);%;0.5
+ed_rate;Estimated;DOUBLE;Environmental decay rate of ESBL E. coli w.r.t the total amount of ESBL E. coli in the environment;Becker et al. (2022);%;0.5
 ingestion_rate;Estimated;DOUBLE;Proportion of ingested contaminated feces along with feed;Becker et al. (2022);%;0.014
 n_legs;Estimated;DOUBLE;Number of legs per catcher;constant;unit;2
 beta.mean;Estimated;DOUBLE;Concentration of ESBL E. coli in the environment;Dame-koreval et al. (2020);CFU/day;0.31
