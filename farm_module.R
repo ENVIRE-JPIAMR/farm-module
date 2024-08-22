@@ -91,8 +91,8 @@ new.farm_module <- function(input_list = load_inputs()){
     total_esbl <-
       sum(esbl_conc_feces * animals$ingested_feces[which(animals$infection_duration == 0)])
     
-    # total feces ingested by doner broilers
-    total_doner_feces <- sum(animals$ingested_feces[which(animals$infection_duration > 0)])
+    # total feces ingested by donor broilers
+    total_donor_feces <- sum(animals$ingested_feces[which(animals$infection_duration > 0)])
     
     # Assumption: the ESBL E. coli ingested by newly infected broilers comes form the 
     #             infected feces in the environment. L114 distributes the source
@@ -108,7 +108,7 @@ new.farm_module <- function(input_list = load_inputs()){
           C_esbl_gut),
         C_sum_esbl_env = ifelse(
           infection_duration > 0,
-          C_sum_esbl_env - (total_esbl * ingested_feces) / total_doner_feces,
+          C_sum_esbl_env - (total_esbl * ingested_feces) / total_donor_feces,
           C_sum_esbl_env)
       )
     
