@@ -48,7 +48,7 @@ new.farm_module <- function(input_list = load_inputs()){
     animals %>%
       mutate(C_esbl_gut = ifelse(infection_duration != -1,
                            K / (
-                             1 + ((K - C_esbl_gut) / C_esbl_gut) * exp(-r)
+                             1 + ((K - C_esbl_gut) / C_esbl_gut) * exp(-r * infection_duration) ### corrected formula
                            ),
                            C_esbl_gut))
   }
