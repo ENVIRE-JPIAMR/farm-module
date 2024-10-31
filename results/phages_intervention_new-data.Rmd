@@ -1,0 +1,175 @@
+---
+title: 'Data analysis: Intervention Phages new data'
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+## Experiment by ENVIRE partner: Poland
+
+2 week-old chickens were purchased from farm with high resistance levels. Chickens were monitored 5 times: 
+day 0 and weekly for 4 weeks. That day chickens were 42 days old. Starting from day 0, each 7-day litter 
+was treated with sprayed phages at titer 10^10 pfu/ml. After chicken removal litter was pulled outside and 
+is being stored.
+
+
+```{r setup, include=FALSE}
+source(here::here("farm-module/visualization.R"))
+source(here::here("farm-module/utilities/data_interpolation.R"))
+source(here::here("farm-module/run_farm_module_parallel.R"))
+
+inputs <- load_inputs()
+n_sim  <- inputs$n_sim
+
+# updating the input params
+input_manual <- list(farm_size = 7.7,
+                     day.max = 42)
+
+input_interpolated <- interpolate_values()
+input_manual <- c(input_manual, input_interpolated)
+
+# simulating parallerl batches
+parallel_output <-
+  batch_simulator_parallel(farm_module = new.farm_module(input_list = load_inputs(input_manual)),
+                           n_sim = n_sim)
+output_avg      <- apply(parallel_output, c(1, 2), mean)
+
+## Data from partners
+# C_ecoli_feces         <- c(4.11e6, 3.07e5, 5.51e6, 3.83e6, 1.39e6)
+# C_ecoli_feces_phages  <- c(5.37e5, 1.47e5, 1.67e6, 6.47e5, 5.64e4)
+# C_ecoli_litter        <- c(4.11e6, 1.03e6, 9.90e6, 9.90e5, 2.10e6)
+# C_ecoli_litter_phages <- c(5.37e5, 4.76e5, 6.20e4, 3.30e5, 4.00e4)
+
+# C_ctx_feces         <- c(3.04e3, 3.96e2, 4.63, 6.70e2, 0.00)
+# C_ctx_feces_phages  <- c(1.90e3, 2.49e2, 1.78e2, 3.13e02, 0.00)
+C_ctx_litter <-  c(mean(c(0,           2.462397998,	0,           0,	          0,           1.602059991))
+                 , mean(c(1.602059991, 1.301029996,	1.431363764, 2.77815125,  2.477121255, 3.602059991))
+                 , mean(c(1.301029996, 1.602059991,	1.301029996, 1.477121255,	1,           1.301029996))
+                 , mean(c(0,           0,           0,           0,	          0,           1.698970004))
+                 , mean(c(0,	         0,	          1,	         0,	          1.301029996, 0)))
+
+C_ctx_litter_phages <- c(mean(c(1.301029996, 0,	          0,          2.491361694, 2.146128036, 2.954242509))
+                       , mean(c(1,           1.301029996, 1.84509804, 2.954242509, 1.903089987, 2.477121255))
+                       , mean(c(1.77815125,  0,           0,          2.477121255, 2,           1))
+                       , mean(c(0,           1,           0,          0,           0,           1))
+                       , mean(c(0,           0,           0,          0,           1.477121255, 0)))
+
+sd_ctx_litter <-  c(sd(c(0,           2.462397998,	0,           0,	          0,           1.602059991))
+                 , sd(c(1.602059991, 1.301029996,	1.431363764, 2.77815125,  2.477121255, 3.602059991))
+                 , sd(c(1.301029996, 1.602059991,	1.301029996, 1.477121255,	1,           1.301029996))
+                 , sd(c(0,           0,           0,           0,	          0,           1.698970004))
+                 , sd(c(0,	         0,	          1,	         0,	          1.301029996, 0)))
+
+sd_ctx_litter_phages <- c(sd(c(1.301029996, 0,	          0,          2.491361694, 2.146128036, 2.954242509))
+                       , sd(c(1,           1.301029996, 1.84509804, 2.954242509, 1.903089987, 2.477121255))
+                       , sd(c(1.77815125,  0,           0,          2.477121255, 2,           1))
+                       , sd(c(0,           1,           0,          0,           0,           1))
+                       , sd(c(0,           0,           0,          0,           1.477121255, 0)))
+
+day_idx <- c(1, 7, 14, 21, 27) + 14
+
+## function for plotting
+plot_qoi <- function(qoi1, qoi2, qoi3, title){
+
+  gg <- ggplot(data = data.frame(
+  days = day_idx,  
+  qoi1 = qoi1,  
+  qoi2 = qoi2,
+  qoi3 = qoi3
+)) +
+  geom_point(aes(x = days, y = qoi1, color = "Simulated"), size = 3) +  
+  geom_line(aes(x = days, y = qoi1, color = "Simulated")) +   
+  geom_point(aes(x = days, y = qoi2, color = "Untreated"), size = 3) + 
+  geom_line(aes(x = days, y = qoi2, color = "Untreated")) + 
+  geom_point(aes(x = days, y = qoi3, color = "Treated"), size = 3) + 
+  geom_line(aes(x = days, y = qoi3, color = "Treated")) + 
+  labs(
+    title = title,
+    subtitle = paste(dim(parallel_output)[3], "simulations"),
+    x = "Days",
+    y = "(log10 CFU/g)"
+  ) +
+  scale_color_manual(values = c("Simulated" = "red", "Treated" = "blue", "Untreated" = "black"),
+                     labels = c("Simulated", "Treated", "Untreated"))
+
+  return(gg)
+}
+
+```
+
+```{r}
+
+## Simulated ESBL E.coli vs experimental E.coli (in feces)
+# qoi1 <- log10(output_avg[, 3])[day_idx] 
+# qoi2 <- log10(C_ecoli_feces)
+# qoi3 <- log10(C_ecoli_feces_phages)
+# plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (feces)")
+
+## Simulated ESBL E.coli vs experimental CTX (in feces)
+# qoi1 <- log10(output_avg[, 3])[day_idx] 
+# qoi2 <- log10(C_ctx_feces)
+# qoi3 <- log10(C_ctx_feces_phages)
+# plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (feces)")
+
+## Simulated ESBL E.coli vs experimental E.coli (in litter)
+# qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx]
+# qoi2 <- log10(C_ecoli_litter)
+# qoi3 <- log10(C_ecoli_litter_phages)
+# plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental E.coli (litter)")
+
+## Simulated ESBL E.coli vs experimental CTX (in litter)
+# qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx]
+# qoi2 <- log10(C_ctx_litter)
+# qoi3 <- log10(C_ctx_litter_phages)
+
+qoi1 <- log10(output_avg[, 1]/(output_avg[, 4]+inputs$litter_mass))[day_idx]
+qoi2 <- C_ctx_litter
+qoi3 <- C_ctx_litter_phages
+plot_qoi(qoi1, qoi2, qoi3, "Simulated ESBL E.coli vs experimental CTX (litter)")
+
+```
+```{r}
+## reductions in experimental CTX concentrations
+reduction_litter_percentage <- (10**(C_ctx_litter[c(2, 3, 5)]) - 10**(C_ctx_litter_phages[c(2, 3, 5)]))/10**(C_ctx_litter[c(2, 3, 5)])
+# reduction_feces_percentage <- (C_ctx_feces - C_ctx_feces_phages)/C_ctx_feces
+
+## fitting a smooth sigmoid to interpolate the reduction
+day_index <- day_idx
+proportion_reduction <- reduction_litter_percentage
+
+# Define the logistic function
+# logistic_function <- function(x, L, k, x0) {
+#   L / (1 + exp(-k * (x - x0)))
+# }
+# 
+# # Initial parameter estimates
+# start_params <- c(L = 1, k = 0.1, x0 = 10)
+# 
+# # Fit the logistic model using nls (non-linear least squares)
+# fit <- nls(proportion_reduction ~ logistic_function(day_index, L, k, x0),
+#            start = start_params)
+# 
+# # Display the summary of the model
+# summary(fit)
+# 
+# # Predict the proportion reduction for day index from 0 to 42
+# predict_days <- 0:42
+# predicted_reduction <- predict(fit, newdata = data.frame(day_index = predict_days))
+# 
+# # Ensure predicted values are between 0 and 1
+# predicted_reduction <- pmin(pmax(predicted_reduction, 0), 1)
+# 
+# # Plot the results
+# plot(day_index, proportion_reduction, main = "Bacteria Proportion Reduction in Litter",
+#      xlab = "Day Index", ylab = "Proportion Reduction", pch = 19, col = "blue")
+# curve(logistic_function(x, coef(fit)[1], coef(fit)[2], coef(fit)[3]), from = 0, to = 42, col = "red", add = TRUE, lwd = 2)
+# legend("bottomright", legend = c("Observed", "Predicted"), col = c("blue", "red"), pch = c(19, NA), lwd = c(NA, 2))
+# 
+# # Print the predicted values
+# predicted_reduction
+
+```
+
+
+
+
